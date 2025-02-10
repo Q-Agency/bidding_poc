@@ -5,7 +5,11 @@ const mockRfpSamples = [
   {
     title: 'Enterprise Data Analytics Platform Development',
     description: `Seeking proposals for the development of a comprehensive data analytics platform that will serve as the organization's central hub for business intelligence and data-driven decision making. The platform should integrate with existing data sources, provide real-time analytics capabilities, and offer intuitive visualization tools for non-technical users. Key focus areas include data warehouse integration, ETL processes, and machine learning capabilities for predictive analytics.`,
-    company: 'DataTech Solutions Inc.',
+    company: {
+      id: 'company_1',
+      name: 'DataTech Solutions Inc.',
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=DTS'
+    },
     estimatedBudget: '$250,000 - $400,000',
     keyRequirements: [
       'Cloud-native architecture using AWS or Azure',
@@ -54,7 +58,11 @@ const mockRfpSamples = [
   {
     title: 'Mobile Banking Application Modernization',
     description: `Project to modernize our existing mobile banking application with enhanced security features, improved user experience, and additional functionality. The solution should maintain compliance with financial regulations while introducing modern technologies and architectural patterns. Focus on creating a scalable, secure, and user-friendly mobile banking experience that supports both retail and business banking customers.`,
-    company: 'SecureBank Financial Group',
+    company: {
+      id: 'company_2',
+      name: 'SecureBank Financial Group',
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=SFG'
+    },
     estimatedBudget: '$300,000 - $500,000',
     keyRequirements: [
       'Biometric authentication integration',
@@ -102,9 +110,13 @@ const mockRfpSamples = [
     suggestedCategory: 'Mobile Development',
   },
   {
-    title: 'Cloud Infrastructure Migration and Optimization',
+    title: 'Cloud Infrastructure Migration',
     description: `Comprehensive cloud migration project to transition our on-premises infrastructure to a cloud-native environment. The project includes assessment of current infrastructure, planning and execution of migration, and optimization of cloud resources. Emphasis on maintaining business continuity, optimizing costs, and implementing modern DevOps practices.`,
-    company: 'CloudFirst Enterprises',
+    company: {
+      id: 'company_3',
+      name: 'CloudFirst Enterprises',
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=CFE'
+    },
     estimatedBudget: '$150,000 - $300,000',
     keyRequirements: [
       'Infrastructure as Code (IaC) implementation',
@@ -153,7 +165,11 @@ const mockRfpSamples = [
   {
     title: 'AI-Powered Customer Service Platform',
     description: `Development of an intelligent customer service platform that leverages artificial intelligence to enhance customer support operations. The system should include chatbot capabilities, sentiment analysis, automated ticket routing, and integration with existing CRM systems. Focus on scalability, accuracy of AI models, and seamless human agent handoff.`,
-    company: 'InnovateAI Solutions',
+    company: {
+      id: 'company_4',
+      name: 'InnovateAI Solutions',
+      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=IAS'
+    },
     estimatedBudget: '$200,000 - $350,000',
     keyRequirements: [
       'Natural Language Processing capabilities',
@@ -232,6 +248,11 @@ export async function analyzeDocument(file: File): Promise<AIAnalysisResult> {
     ...mockResponse,
     estimatedBudget: `$${adjustedMin.toLocaleString()} - $${adjustedMax.toLocaleString()}`,
     suggestedDeadline: adjustedDeadline.toISOString().split('T')[0],
+    company: {
+      id: mockResponse.company.id,
+      name: mockResponse.company.name,
+      logo: mockResponse.company.logo
+    }
   };
 }
 

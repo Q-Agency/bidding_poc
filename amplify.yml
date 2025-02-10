@@ -3,10 +3,11 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - npm install
+        - npm ci --legacy-peer-deps
     build:
       commands:
-        - npm run dev
+        - npm run build
   artifacts:
     baseDirectory: .next
     files:
