@@ -68,7 +68,13 @@ function formatDate(dateString: string) {
 }
 
 function formatCurrency(amount: string) {
-  return amount;
+  const numericAmount = parseFloat(amount.replace(/[^0-9.-]+/g, ''));
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(numericAmount);
 }
 
 // Mock PDF content for preview
@@ -86,10 +92,9 @@ export default function BidDetailsPage() {
     let foundBid: ExtendedBid | null = null;
     
     // Search through all RFPs to find the matching bid
-    rfps.forEach((rfp: RFP) => {
+    for (const rfp of rfps) {
       const matchingBid = rfp.bids.find(b => b.id === params.id);
       if (matchingBid && rfp.company) {
-        // Create an extended bid with additional mock data
         foundBid = {
           id: matchingBid.id,
           companyId: matchingBid.companyId,
@@ -106,106 +111,19 @@ export default function BidDetailsPage() {
             logo: rfp.company.logo
           },
           deadline: rfp.deadline,
-          // Add mock data for additional fields
-          proposal: `We propose a comprehensive solution that leverages our expertise in ${rfp.category}. Our team has successfully delivered similar projects and we are confident in our ability to meet your requirements within the specified timeline and budget.`,
-          technicalApproach: `Our technical approach combines industry best practices with innovative solutions. We will utilize modern development practices including Agile methodology, CI/CD pipelines, and automated testing to ensure high-quality deliverables.`,
-          methodology: `Our methodology is based on proven project management frameworks and technical excellence. We follow a structured approach that ensures clear communication, regular deliverables, and continuous improvement throughout the project lifecycle.`,
-          deliverables: [
-            'Detailed project documentation',
-            'Source code with comprehensive comments',
-            'User manuals and training materials',
-            'Regular progress reports',
-            'Quality assurance reports',
-            'Security audit documentation'
-          ],
-          projectMilestones: [
-            {
-              title: 'Project Initiation',
-              duration: '2 weeks',
-              description: 'Requirements gathering, project planning, and team onboarding'
-            },
-            {
-              title: 'Design Phase',
-              duration: '3 weeks',
-              description: 'Architecture design, technical specifications, and prototype development'
-            },
-            {
-              title: 'Development Phase',
-              duration: '8 weeks',
-              description: 'Core functionality implementation and iterative development'
-            },
-            {
-              title: 'Testing & QA',
-              duration: '3 weeks',
-              description: 'Comprehensive testing, security audits, and performance optimization'
-            },
-            {
-              title: 'Deployment',
-              duration: '2 weeks',
-              description: 'System deployment, documentation, and knowledge transfer'
-            }
-          ],
-          teamComposition: [
-            {
-              role: 'Project Manager',
-              experience: '10+ years in software project management',
-              certifications: ['PMP', 'Scrum Master', 'PRINCE2']
-            },
-            {
-              role: 'Technical Lead',
-              experience: '8+ years in software architecture and development',
-              certifications: ['AWS Certified Solutions Architect', 'Microsoft Certified: Azure Solutions Architect']
-            },
-            {
-              role: 'Senior Developer',
-              experience: '6+ years in full-stack development',
-              certifications: ['Full Stack Developer Certification', 'Cloud Native Computing Foundation Certification']
-            },
-            {
-              role: 'Quality Assurance Lead',
-              experience: '5+ years in software testing and quality assurance',
-              certifications: ['ISTQB Advanced Level Test Manager', 'Certified Software Quality Analyst']
-            }
-          ],
-          qualityAssurance: `Our quality assurance process includes:
-- Automated testing with minimum 90% code coverage
-- Regular code reviews and pair programming
-- Security vulnerability scanning
-- Performance testing and optimization
-- Compliance checks and documentation
-- User acceptance testing`,
-          riskMitigation: `Our risk mitigation strategy includes:
-- Regular risk assessment and monitoring
-- Clear escalation procedures
-- Backup and contingency plans
-- Regular stakeholder communication
-- Change management processes
-- Knowledge transfer and documentation`,
-          documents: [
-            {
-              name: 'Technical Proposal.pdf',
-              url: '#'
-            },
-            {
-              name: 'Project Timeline.pdf',
-              url: '#'
-            },
-            {
-              name: 'Team Profiles.pdf',
-              url: '#'
-            },
-            {
-              name: 'Quality Assurance Plan.pdf',
-              url: '#'
-            },
-            {
-              name: 'Risk Management Strategy.pdf',
-              url: '#'
-            }
-          ]
-        };
+          proposal: matchingBid.proposal,
+          technicalApproach: matchingBid.technicalApproach,
+          methodology: matchingBid.methodology,
+          deliverables: matchingBid.deliverables,
+          projectMilestones: matchingBid.projectMilestones,
+          teamComposition: matchingBid.teamComposition,
+          qualityAssurance: matchingBid.qualityAssurance,
+          riskMitigation: matchingBid.riskMitigation,
+          documents: matchingBid.documents
+        } satisfies ExtendedBid;
+        break;
       }
-    });
+    }
     return foundBid;
   }, [rfps, params.id]);
 
@@ -239,6 +157,9 @@ export default function BidDetailsPage() {
     );
   }
 
+  // At this point TypeScript knows typedBid is not null
+  const bid: ExtendedBid = typedBid;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
@@ -260,25 +181,25 @@ export default function BidDetailsPage() {
               </h1>
               <div className="mt-2 flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  {typedBid.rfpCompany.logo && (
+                  {bid.rfpCompany.logo && (
                     <img
-                      src={typedBid.rfpCompany.logo}
-                      alt={typedBid.rfpCompany.name}
+                      src={bid.rfpCompany.logo}
+                      alt={bid.rfpCompany.name}
                       className="h-6 w-6 rounded-full"
                     />
                   )}
-                  <span className="text-gray-600">{typedBid.rfpCompany.name}</span>
+                  <span className="text-gray-600">{bid.rfpCompany.name}</span>
                 </div>
                 <span className="text-gray-500">•</span>
-                <span className="text-gray-600">Submitted {formatDate(typedBid.submittedAt)}</span>
+                <span className="text-gray-600">Submitted {formatDate(bid.submittedAt)}</span>
               </div>
             </div>
             <div className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
-              typedBid.status === 'accepted' ? 'bg-green-100 text-green-800' :
-              typedBid.status === 'rejected' ? 'bg-red-100 text-red-800' :
+              bid.status === 'accepted' ? 'bg-green-100 text-green-800' :
+              bid.status === 'rejected' ? 'bg-red-100 text-red-800' :
               'bg-yellow-100 text-yellow-800'
             }`}>
-              {typedBid.status.charAt(0).toUpperCase() + typedBid.status.slice(1)}
+              {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
             </div>
           </div>
         </div>
@@ -300,25 +221,25 @@ export default function BidDetailsPage() {
               <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                 <div className="bg-gray-50/50 rounded-xl p-4">
                   <dt className="text-sm font-medium text-gray-500">Proposed Budget</dt>
-                  <dd className="mt-1 text-lg font-semibold text-gray-900">{formatCurrency(typedBid.proposedBudget)}</dd>
+                  <dd className="mt-1 text-lg font-semibold text-gray-900">{formatCurrency(bid.proposedBudget)}</dd>
                 </div>
                 <div className="bg-gray-50/50 rounded-xl p-4">
                   <dt className="text-sm font-medium text-gray-500">Timeline</dt>
-                  <dd className="mt-1 text-lg font-semibold text-gray-900">{typedBid.proposedTimeline}</dd>
+                  <dd className="mt-1 text-lg font-semibold text-gray-900">{bid.proposedTimeline}</dd>
                 </div>
                 <div className="bg-gray-50/50 rounded-xl p-4">
                   <dt className="text-sm font-medium text-gray-500">Company</dt>
-                  <dd className="mt-1 text-lg font-semibold text-gray-900">{typedBid.companyName}</dd>
+                  <dd className="mt-1 text-lg font-semibold text-gray-900">{bid.companyName}</dd>
                 </div>
                 <div className="bg-gray-50/50 rounded-xl p-4">
                   <dt className="text-sm font-medium text-gray-500">RFP Title</dt>
-                  <dd className="mt-1 text-lg font-semibold text-gray-900">{typedBid.rfpTitle}</dd>
+                  <dd className="mt-1 text-lg font-semibold text-gray-900">{bid.rfpTitle}</dd>
                 </div>
               </dl>
             </div>
 
             {/* Technical Proposal */}
-            {typedBid.proposal && (
+            {bid.proposal && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -329,13 +250,13 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="prose prose-primary max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{typedBid.proposal}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{bid.proposal}</p>
                 </div>
               </div>
             )}
 
             {/* Technical Approach */}
-            {typedBid.technicalApproach && (
+            {bid.technicalApproach && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -346,13 +267,13 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="prose prose-primary max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{typedBid.technicalApproach}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{bid.technicalApproach}</p>
                 </div>
               </div>
             )}
 
             {/* Methodology */}
-            {typedBid.methodology && (
+            {bid.methodology && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -363,13 +284,13 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="prose prose-primary max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{typedBid.methodology}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{bid.methodology}</p>
                 </div>
               </div>
             )}
 
             {/* Deliverables */}
-            {typedBid.deliverables && typedBid.deliverables.length > 0 && (
+            {bid.deliverables && bid.deliverables.length > 0 && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -380,7 +301,7 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <ul className="space-y-4">
-                  {typedBid.deliverables.map((deliverable, index) => (
+                  {bid.deliverables.map((deliverable, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <svg className="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -393,7 +314,7 @@ export default function BidDetailsPage() {
             )}
 
             {/* Project Milestones */}
-            {typedBid.projectMilestones && typedBid.projectMilestones.length > 0 && (
+            {bid.projectMilestones && bid.projectMilestones.length > 0 && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -404,7 +325,7 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="space-y-6">
-                  {typedBid.projectMilestones.map((milestone, index) => (
+                  {bid.projectMilestones.map((milestone, index) => (
                     <div key={index} className="bg-gray-50/50 rounded-xl p-4">
                       <div className="flex justify-between items-start">
                         <h3 className="text-lg font-medium text-gray-900">{milestone.title}</h3>
@@ -420,7 +341,7 @@ export default function BidDetailsPage() {
             )}
 
             {/* Team Composition */}
-            {typedBid.teamComposition && typedBid.teamComposition.length > 0 && (
+            {bid.teamComposition && bid.teamComposition.length > 0 && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,7 +352,7 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="space-y-6">
-                  {typedBid.teamComposition.map((member, index) => (
+                  {bid.teamComposition.map((member, index) => (
                     <div key={index} className="bg-gray-50/50 rounded-xl p-4">
                       <div className="flex justify-between items-start">
                         <h3 className="text-lg font-medium text-gray-900">{member.role}</h3>
@@ -459,7 +380,7 @@ export default function BidDetailsPage() {
             )}
 
             {/* Quality Assurance */}
-            {typedBid.qualityAssurance && (
+            {bid.qualityAssurance && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -470,13 +391,13 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="prose prose-primary max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{typedBid.qualityAssurance}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{bid.qualityAssurance}</p>
                 </div>
               </div>
             )}
 
             {/* Risk Mitigation */}
-            {typedBid.riskMitigation && (
+            {bid.riskMitigation && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -487,13 +408,13 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="prose prose-primary max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{typedBid.riskMitigation}</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{bid.riskMitigation}</p>
                 </div>
               </div>
             )}
 
             {/* Supporting Documents */}
-            {typedBid.documents && typedBid.documents.length > 0 && (
+            {bid.documents && bid.documents.length > 0 && (
               <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -504,7 +425,7 @@ export default function BidDetailsPage() {
                   </h2>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
-                  {typedBid.documents.map((doc, index) => (
+                  {bid.documents.map((doc, index) => (
                     <button
                       key={index}
                       onClick={() => handlePreviewDocument(doc.name)}
@@ -538,21 +459,21 @@ export default function BidDetailsPage() {
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1">
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                      typedBid.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                      typedBid.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      bid.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                      bid.status === 'rejected' ? 'bg-red-100 text-red-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {typedBid.status.charAt(0).toUpperCase() + typedBid.status.slice(1)}
+                      {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
                     </span>
                   </dd>
                 </div>
                 <div className="bg-gray-50/50 rounded-xl p-4">
                   <dt className="text-sm font-medium text-gray-500">Submitted</dt>
-                  <dd className="mt-1 text-gray-900">{formatDate(typedBid.submittedAt)}</dd>
+                  <dd className="mt-1 text-gray-900">{formatDate(bid.submittedAt)}</dd>
                 </div>
                 <div className="bg-gray-50/50 rounded-xl p-4">
                   <dt className="text-sm font-medium text-gray-500">Deadline</dt>
-                  <dd className="mt-1 text-gray-900">{typedBid.deadline ? formatDate(typedBid.deadline) : 'Not specified'}</dd>
+                  <dd className="mt-1 text-gray-900">{bid.deadline ? formatDate(bid.deadline) : 'Not specified'}</dd>
                 </div>
               </div>
             </div>
