@@ -30,10 +30,14 @@ const mockRfps: RFP[] = [
       size: '5-7 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'Technical Requirements.pdf',
         url: '/documents/tech_req.pdf'
+      },
+      {
+        name: 'AI Platform Architecture.pdf',
+        url: '/documents/ai_arch.pdf'
       }
     ],
     bids: [
@@ -95,10 +99,14 @@ const mockRfps: RFP[] = [
       size: '4-6 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'System Architecture.pdf',
         url: '/documents/arch.pdf'
+      },
+      {
+        name: 'Smart Contract Specifications.pdf',
+        url: '/documents/smart_contracts.pdf'
       }
     ],
     bids: [
@@ -151,10 +159,14 @@ const mockRfps: RFP[] = [
       size: '6-8 team members'
     },
     status: 'closed',
-    documents: [
+    files: [
       {
         name: 'IoT Architecture.pdf',
         url: '/documents/iot_arch.pdf'
+      },
+      {
+        name: 'Fleet Management Requirements.pdf',
+        url: '/documents/fleet_req.pdf'
       }
     ],
     bids: [
@@ -217,7 +229,7 @@ const mockRfps: RFP[] = [
       size: '5-7 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'Cybersecurity Enhancement Project RFP.pdf',
         url: '/mock-documents/rfp_4_full.pdf'
@@ -291,10 +303,14 @@ const mockRfps: RFP[] = [
       size: '6-8 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'IoT Fleet Management System RFP.pdf',
         url: '/mock-documents/rfp_5_full.pdf'
+      },
+      {
+        name: 'Technical Specifications.pdf',
+        url: '/mock-documents/rfp_5_specs.pdf'
       }
     ],
     bids: [
@@ -357,7 +373,7 @@ const mockRfps: RFP[] = [
       size: '7-10 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'Blockchain Supply Chain Platform RFP.pdf',
         url: '/mock-documents/rfp_6_full.pdf'
@@ -365,6 +381,10 @@ const mockRfps: RFP[] = [
       {
         name: 'Smart Contract Specifications.pdf',
         url: '/mock-documents/rfp_6_contracts.pdf'
+      },
+      {
+        name: 'Integration Guidelines.pdf',
+        url: '/mock-documents/rfp_6_integration.pdf'
       }
     ],
     bids: [
@@ -427,7 +447,7 @@ const mockRfps: RFP[] = [
       size: '5-8 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'AR Training Platform RFP.pdf',
         url: '/mock-documents/rfp_7_full.pdf'
@@ -501,7 +521,7 @@ const mockRfps: RFP[] = [
       size: '8-12 team members'
     },
     status: 'published',
-    documents: [
+    files: [
       {
         name: 'Healthcare Analytics Platform RFP.pdf',
         url: '/mock-documents/rfp_8_full.pdf'
@@ -509,6 +529,10 @@ const mockRfps: RFP[] = [
       {
         name: 'HIPAA Compliance Requirements.pdf',
         url: '/mock-documents/rfp_8_hipaa.pdf'
+      },
+      {
+        name: 'Data Security Guidelines.pdf',
+        url: '/mock-documents/rfp_8_security.pdf'
       }
     ],
     bids: [
@@ -519,7 +543,85 @@ const mockRfps: RFP[] = [
         proposedBudget: '$580,000',
         proposedTimeline: '8 months',
         status: 'pending',
-        submittedAt: '2024-03-11T09:45:00Z'
+        submittedAt: '2024-03-11T09:45:00Z',
+        proposal: `Our comprehensive healthcare analytics solution combines cutting-edge technology with deep industry expertise. We specialize in healthcare data analytics and have a proven track record of successful implementations.`,
+        technicalApproach: `We employ a data-driven approach using modern analytics tools and frameworks. Our solution architecture ensures scalability, security, and compliance with healthcare standards.`,
+        methodology: `Our agile methodology focuses on iterative development with continuous stakeholder feedback. We maintain transparency throughout the project lifecycle with regular demos and updates.`,
+        deliverables: [
+          'Healthcare analytics platform documentation',
+          'Data processing pipelines',
+          'Interactive dashboards',
+          'API documentation',
+          'Training materials',
+          'Security compliance reports'
+        ],
+        projectMilestones: [
+          {
+            title: 'Requirements Analysis',
+            duration: '3 weeks',
+            description: 'Detailed analysis of requirements and system architecture planning'
+          },
+          {
+            title: 'Platform Development',
+            duration: '12 weeks',
+            description: 'Core platform development and integration with existing systems'
+          },
+          {
+            title: 'Testing & Validation',
+            duration: '4 weeks',
+            description: 'Comprehensive testing and security validation'
+          },
+          {
+            title: 'Deployment',
+            duration: '3 weeks',
+            description: 'Platform deployment and initial monitoring'
+          }
+        ],
+        teamComposition: [
+          {
+            role: 'Technical Lead',
+            experience: '12+ years in healthcare IT',
+            certifications: ['AWS Healthcare', 'HIPAA Compliance', 'PMP']
+          },
+          {
+            role: 'Data Scientist',
+            experience: '8+ years in healthcare analytics',
+            certifications: ['Machine Learning Expert', 'Healthcare Analytics']
+          },
+          {
+            role: 'Security Specialist',
+            experience: '7+ years in healthcare security',
+            certifications: ['CISSP', 'Healthcare Security Certified']
+          }
+        ],
+        qualityAssurance: `Our quality assurance process includes:
+- Automated testing suite
+- Performance benchmarking
+- Security penetration testing
+- Compliance verification
+- User acceptance testing
+- Documentation review`,
+        riskMitigation: `Risk management strategy includes:
+- Weekly risk assessments
+- Backup data centers
+- Disaster recovery planning
+- Regular security audits
+- Compliance monitoring
+- Change management procedures`,
+        documents: [
+          {
+            name: 'Technical Solution.pdf',
+            url: '#'
+          },
+          {
+            name: 'Implementation Plan.pdf',
+            url: '#'
+          },
+          {
+            name: 'Team Credentials.pdf',
+            url: '#'
+          }
+        ]
       },
       {
         id: 'bid_28',
@@ -528,7 +630,85 @@ const mockRfps: RFP[] = [
         proposedBudget: '$650,000',
         proposedTimeline: '7 months',
         status: 'accepted',
-        submittedAt: '2024-03-12T14:30:00Z'
+        submittedAt: '2024-03-12T14:30:00Z',
+        proposal: `We offer a state-of-the-art clinical data analytics platform that leverages AI and machine learning. Our solution is designed specifically for healthcare providers with a focus on actionable insights.`,
+        technicalApproach: `Our platform utilizes microservices architecture with containerization for scalability. We implement real-time data processing with advanced analytics capabilities.`,
+        methodology: `We follow a hybrid methodology combining Agile and DevOps practices. Our approach ensures rapid development while maintaining high quality and security standards.`,
+        deliverables: [
+          'Clinical analytics platform',
+          'Real-time dashboards',
+          'Mobile applications',
+          'Integration APIs',
+          'System documentation',
+          'Compliance reports'
+        ],
+        projectMilestones: [
+          {
+            title: 'Discovery Phase',
+            duration: '2 weeks',
+            description: 'Requirements gathering and system design'
+          },
+          {
+            title: 'Core Development',
+            duration: '14 weeks',
+            description: 'Platform development and integration'
+          },
+          {
+            title: 'Quality Assurance',
+            duration: '4 weeks',
+            description: 'Testing and security validation'
+          },
+          {
+            title: 'Launch',
+            duration: '2 weeks',
+            description: 'Deployment and stabilization'
+          }
+        ],
+        teamComposition: [
+          {
+            role: 'Solution Architect',
+            experience: '15+ years in healthcare systems',
+            certifications: ['Azure Healthcare', 'TOGAF', 'ITIL']
+          },
+          {
+            role: 'ML Engineer',
+            experience: '10+ years in AI/ML',
+            certifications: ['TensorFlow', 'Healthcare AI Certified']
+          },
+          {
+            role: 'DevOps Engineer',
+            experience: '8+ years in cloud infrastructure',
+            certifications: ['Kubernetes', 'AWS Certified']
+          }
+        ],
+        qualityAssurance: `Quality assurance framework includes:
+- CI/CD pipeline
+- Automated testing
+- Performance monitoring
+- Security scanning
+- Code quality checks
+- User testing`,
+        riskMitigation: `Risk management includes:
+- Daily backups
+- Failover systems
+- Security protocols
+- Compliance checks
+- Incident response
+- Change management`,
+        documents: [
+          {
+            name: 'Solution Architecture.pdf',
+            url: '#'
+          },
+          {
+            name: 'Project Plan.pdf',
+            url: '#'
+          },
+          {
+            name: 'Security Framework.pdf',
+            url: '#'
+          }
+        ]
       },
       {
         id: 'bid_29',
@@ -537,16 +717,85 @@ const mockRfps: RFP[] = [
         proposedBudget: '$620,000',
         proposedTimeline: '9 months',
         status: 'rejected',
-        submittedAt: '2024-03-13T11:15:00Z'
-      },
-      {
-        id: 'bid_30',
-        companyId: 'comp_30',
-        companyName: 'Healthcare Analytics Pro',
-        proposedBudget: '$600,000',
-        proposedTimeline: '6 months',
-        status: 'pending',
-        submittedAt: '2024-03-14T10:00:00Z'
+        submittedAt: '2024-03-13T11:15:00Z',
+        proposal: `Our AI-powered healthcare analytics solution provides deep insights into clinical data. We focus on predictive analytics and pattern recognition for improved healthcare outcomes.`,
+        technicalApproach: `We implement a cloud-native solution with AI/ML capabilities. Our architecture ensures HIPAA compliance and seamless integration with existing systems.`,
+        methodology: `Our methodology combines Data Science and Agile practices. We emphasize continuous learning and adaptation throughout the project lifecycle.`,
+        deliverables: [
+          'AI analytics engine',
+          'Predictive models',
+          'Integration framework',
+          'Documentation suite',
+          'Training modules',
+          'Compliance documentation'
+        ],
+        projectMilestones: [
+          {
+            title: 'Initial Setup',
+            duration: '3 weeks',
+            description: 'Environment setup and requirement analysis'
+          },
+          {
+            title: 'AI Development',
+            duration: '16 weeks',
+            description: 'Core AI engine development'
+          },
+          {
+            title: 'Integration',
+            duration: '8 weeks',
+            description: 'System integration and testing'
+          },
+          {
+            title: 'Deployment',
+            duration: '4 weeks',
+            description: 'Production deployment and monitoring'
+          }
+        ],
+        teamComposition: [
+          {
+            role: 'AI Lead',
+            experience: '12+ years in healthcare AI',
+            certifications: ['PhD in AI', 'Healthcare Analytics Expert']
+          },
+          {
+            role: 'Data Engineer',
+            experience: '9+ years in data engineering',
+            certifications: ['Apache Spark', 'Google Cloud Certified']
+          },
+          {
+            role: 'Clinical Expert',
+            experience: '10+ years in healthcare',
+            certifications: ['MD', 'Clinical Informatics']
+          }
+        ],
+        qualityAssurance: `Quality assurance process includes:
+- Model validation
+- Data quality checks
+- Performance testing
+- Security audits
+- Clinical validation
+- Documentation review`,
+        riskMitigation: `Risk management strategy includes:
+- Model monitoring
+- Data backup
+- Security protocols
+- Compliance checks
+- Version control
+- Change management`,
+        documents: [
+          {
+            name: 'AI Architecture.pdf',
+            url: '#'
+          },
+          {
+            name: 'Clinical Validation.pdf',
+            url: '#'
+          },
+          {
+            name: 'Team Profile.pdf',
+            url: '#'
+          }
+        ]
       }
     ],
     createdAt: '2024-02-24T00:00:00Z',

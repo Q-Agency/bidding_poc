@@ -1,161 +1,110 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useRfpStore } from '@/store/rfp';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { useMemo, useState } from 'react';
 
-// Mock bids data
-const mockBids = [
-  {
-    id: 'bid_1',
-    rfpId: 'rfp_1',
-    rfpTitle: 'Enterprise Data Analytics Platform Development',
-    rfpCompany: {
-      id: '1',
-      name: 'Tech Solutions Inc.',
-      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=TS'
-    },
-    proposedBudget: '$285,000',
-    proposedTimeline: '5 months',
-    status: 'pending',
-    submittedAt: '2024-02-15T10:00:00Z',
-    deadline: '2024-06-30'
-  },
-  {
-    id: 'bid_2',
-    rfpId: 'rfp_2',
-    rfpTitle: 'Mobile Banking Application Modernization',
-    rfpCompany: {
-      id: '1',
-      name: 'FinTech Corp',
-      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=FC'
-    },
-    proposedBudget: '$420,000',
-    proposedTimeline: '7 months',
-    status: 'accepted',
-    submittedAt: '2024-02-10T14:30:00Z',
-    deadline: '2024-08-15'
-  },
-  {
-    id: 'bid_3',
-    rfpId: 'rfp_3',
-    rfpTitle: 'Cloud Infrastructure Migration',
-    rfpCompany: {
-      id: '1',
-      name: 'CloudTech Solutions',
-      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=CS'
-    },
-    proposedBudget: '$265,000',
-    proposedTimeline: '4 months',
-    status: 'rejected',
-    submittedAt: '2024-02-05T09:15:00Z',
-    deadline: '2024-07-30'
-  },
-  {
-    id: 'bid_4',
-    rfpId: 'rfp_4',
-    rfpTitle: 'AI-Powered Customer Service Platform',
-    rfpCompany: {
-      id: '1',
-      name: 'AI Innovations Ltd',
-      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=AI'
-    },
-    proposedBudget: '$310,000',
-    proposedTimeline: '6 months',
-    status: 'pending',
-    submittedAt: '2024-02-18T11:45:00Z',
-    deadline: '2024-09-15'
-  },
-  {
-    id: 'bid_5',
-    rfpId: 'rfp_5',
-    rfpTitle: 'E-commerce Platform Upgrade',
-    rfpCompany: {
-      id: '1',
-      name: 'Digital Retail Solutions',
-      logo: 'https://api.dicebear.com/7.x/initials/svg?seed=DR'
-    },
-    proposedBudget: '$175,000',
-    proposedTimeline: '3 months',
-    status: 'accepted',
-    submittedAt: '2024-02-01T16:20:00Z',
-    deadline: '2024-05-30'
-  }
-];
-
-// Helper function for date formatting
 function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
   });
 }
 
+function formatCurrency(amount: string) {
+  const value = parseInt(amount.replace(/[^0-9]/g, ''));
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+interface Bid {
+  id: string;
+  rfpId: string;
+  rfpTitle: string;
+  company: {
+    name: string;
+    logo?: string;
+  };
+  budget: string;
+  proposedBudget: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  submittedAt: string;
+}
+
 export default function MyBidsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const [sortField, setSortField] = useState<'rfp' | 'company' | 'budget' | 'timeline' | 'status' | 'submittedAt'>('submittedAt');
+  const { rfps } = useRfpStore();
+  const [sortField, setSortField] = useState<'rfpTitle' | 'company' | 'budget' | 'status' | 'submittedAt'>('submittedAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const myBids = useMemo(() => {
+    const allBids: Bid[] = [];
+
+    rfps.forEach(rfp => {
+      rfp.bids.forEach(bid => {
+        allBids.push({
+          id: bid.id,
+          rfpId: rfp.id,
+          rfpTitle: rfp.title,
+          company: rfp.company,
+          budget: rfp.budget,
+          proposedBudget: bid.proposedBudget,
+          status: bid.status,
+          submittedAt: bid.submittedAt,
+        });
+      });
+    });
+
+    return allBids;
+  }, [rfps]);
+
   const sortedAndFilteredBids = useMemo(() => {
-    let filteredBids = mockBids;
-    
+    let filtered = myBids;
+
+    // Apply status filter
     if (statusFilter !== 'all') {
-      filteredBids = filteredBids.filter(bid => bid.status === statusFilter);
+      filtered = filtered.filter(bid => bid.status === statusFilter);
     }
 
+    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filteredBids = filteredBids.filter(bid => 
+      filtered = filtered.filter(bid => 
         bid.rfpTitle.toLowerCase().includes(query) ||
-        bid.rfpCompany.name.toLowerCase().includes(query)
+        bid.company.name.toLowerCase().includes(query)
       );
     }
 
-    return [...filteredBids].sort((a, b) => {
+    // Sort bids
+    return [...filtered].sort((a, b) => {
       if (sortField === 'submittedAt') {
         const dateA = new Date(a.submittedAt).getTime();
         const dateB = new Date(b.submittedAt).getTime();
         return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
       }
 
-      if (sortField === 'rfp') {
-        return sortDirection === 'desc'
-          ? b.rfpTitle.localeCompare(a.rfpTitle)
-          : a.rfpTitle.localeCompare(b.rfpTitle);
-      }
-
       if (sortField === 'company') {
         return sortDirection === 'desc'
-          ? b.rfpCompany.name.localeCompare(a.rfpCompany.name)
-          : a.rfpCompany.name.localeCompare(b.rfpCompany.name);
+          ? b.company.name.localeCompare(a.company.name)
+          : a.company.name.localeCompare(b.company.name);
       }
 
-      if (sortField === 'budget') {
-        const budgetA = parseInt(a.proposedBudget.replace(/[^0-9]/g, ''));
-        const budgetB = parseInt(b.proposedBudget.replace(/[^0-9]/g, ''));
-        return sortDirection === 'desc' ? budgetB - budgetA : budgetA - budgetB;
-      }
-
-      if (sortField === 'timeline') {
-        return sortDirection === 'desc'
-          ? b.proposedTimeline.localeCompare(a.proposedTimeline)
-          : a.proposedTimeline.localeCompare(b.proposedTimeline);
-      }
-
-      if (sortField === 'status') {
-        return sortDirection === 'desc'
-          ? b.status.localeCompare(a.status)
-          : a.status.localeCompare(b.status);
-      }
-
-      return 0;
+      const valueA = a[sortField];
+      const valueB = b[sortField];
+      return sortDirection === 'desc'
+        ? String(valueB).localeCompare(String(valueA))
+        : String(valueA).localeCompare(String(valueB));
     });
-  }, [sortField, sortDirection, statusFilter, searchQuery]);
+  }, [myBids, sortField, sortDirection, statusFilter, searchQuery]);
 
   const handleSort = (field: typeof sortField) => {
     if (sortField === field) {
@@ -180,152 +129,157 @@ export default function MyBidsPage() {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="border-b border-gray-200 pb-5">
-        <h3 className="text-2xl font-semibold leading-6 text-gray-900">
-          My Bids
-        </h3>
-        <p className="mt-2 text-sm text-gray-500">
-          Track and manage all your submitted bids
-        </p>
-      </div>
-
-      <div className="mt-4 flex flex-col sm:flex-row gap-4 items-center">
-        <div className="w-full sm:w-64">
-          <label htmlFor="search" className="sr-only">Search bids</label>
-          <input
-            type="search"
-            name="search"
-            id="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            placeholder="Search bids..."
-          />
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header Section */}
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            My Bids
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Track and manage your submitted proposals
+          </p>
         </div>
-        <div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-      </div>
 
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th 
-                      scope="col" 
-                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
-                      onClick={() => handleSort('rfp')}
-                    >
-                      RFP Title
-                      <SortIcon field="rfp" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('company')}
-                    >
-                      Company
-                      <SortIcon field="company" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('budget')}
-                    >
-                      Proposed Budget
-                      <SortIcon field="budget" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('timeline')}
-                    >
-                      Timeline
-                      <SortIcon field="timeline" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('status')}
-                    >
-                      Status
-                      <SortIcon field="status" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('submittedAt')}
-                    >
-                      Submitted
-                      <SortIcon field="submittedAt" />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {sortedAndFilteredBids.map((bid) => (
-                    <tr 
-                      key={bid.id}
-                      onClick={() => handleRowClick(bid.rfpId, bid.id)}
-                      className="cursor-pointer hover:bg-gray-50"
-                    >
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {bid.rfpTitle}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
-                          {bid.rfpCompany.logo && (
-                            <img
-                              src={bid.rfpCompany.logo}
-                              alt={bid.rfpCompany.name}
-                              className="h-6 w-6 rounded-full"
-                            />
-                          )}
-                          <span>{bid.rfpCompany.name}</span>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {bid.proposedBudget}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {bid.proposedTimeline}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          bid.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          bid.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {formatDate(bid.submittedAt)}
-                      </td>
-                    </tr>
-                  ))}
-                  {sortedAndFilteredBids.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-3 py-4 text-sm text-gray-500 text-center">
-                        No bids found matching the selected filters
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+        {/* Search and Filters */}
+        <div className="rounded-2xl bg-white p-6 shadow-soft hover:shadow-glow transition-all duration-300 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="search"
+                placeholder="Search bids..."
+                className="form-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+            <div className="sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                className="form-select"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Bids List */}
+        <div className="rounded-2xl bg-white p-6 shadow-soft hover:shadow-glow transition-all duration-300">
+          <div className="overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 rounded-t-xl">
+                <tr>
+                  <th
+                    scope="col"
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
+                    onClick={() => handleSort('rfpTitle')}
+                  >
+                    RFP Title
+                    <SortIcon field="rfpTitle" />
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('company')}
+                  >
+                    Company
+                    <SortIcon field="company" />
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('budget')}
+                  >
+                    Budget
+                    <SortIcon field="budget" />
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('status')}
+                  >
+                    Status
+                    <SortIcon field="status" />
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('submittedAt')}
+                  >
+                    Submitted
+                    <SortIcon field="submittedAt" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {sortedAndFilteredBids.map((bid) => (
+                  <tr
+                    key={bid.id}
+                    onClick={() => handleRowClick(bid.rfpId, bid.id)}
+                    className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                  >
+                    <td className="py-4 pl-4 pr-3 text-sm sm:pl-6">
+                      <div className="font-medium text-gray-900">{bid.rfpTitle}</div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        ID: {bid.rfpId}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        {bid.company.logo && (
+                          <img
+                            src={bid.company.logo}
+                            alt={bid.company.name}
+                            className="h-6 w-6 rounded-full flex-shrink-0"
+                          />
+                        )}
+                        <span>{bid.company.name}</span>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      <div className="font-medium text-gray-900">
+                        {formatCurrency(bid.proposedBudget)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Budget: {formatCurrency(bid.budget)}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                        bid.status === 'pending' ? 'bg-yellow-50 text-yellow-700' :
+                        bid.status === 'accepted' ? 'bg-green-50 text-green-700' :
+                        'bg-accent-50 text-accent-700'
+                      }`}>
+                        {bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <span className="inline-flex items-center rounded-full bg-secondary-50 px-2 py-1 text-xs font-medium text-secondary-700">
+                        {formatDate(bid.submittedAt)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {sortedAndFilteredBids.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-3 py-8 text-center text-sm text-gray-500">
+                      <div className="flex flex-col items-center justify-center">
+                        <svg className="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <p className="text-gray-900 font-medium">No bids found</p>
+                        <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

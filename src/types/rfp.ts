@@ -20,11 +20,13 @@ export interface RFP {
     size: string;
   };
   status: 'draft' | 'published' | 'closed';
-  documents: {
+  createdAt: string;
+  updatedAt: string;
+  files?: Array<{
     name: string;
     url: string;
-  }[];
-  bids: {
+  }>;
+  bids: Array<{
     id: string;
     companyId: string;
     companyName: string;
@@ -32,9 +34,31 @@ export interface RFP {
     proposedTimeline: string;
     status: 'pending' | 'accepted' | 'rejected';
     submittedAt: string;
-  }[];
-  createdAt: string;
-  updatedAt: string;
+    proposal?: string;
+    technicalApproach?: string;
+    methodology?: string;
+    deliverables?: string[];
+    projectMilestones?: Array<{
+      title: string;
+      duration: string;
+      description: string;
+    }>;
+    teamComposition?: Array<{
+      role: string;
+      experience: string;
+      certifications: string[];
+    }>;
+    qualityAssurance?: string;
+    riskMitigation?: string;
+    documents?: Array<{
+      name: string;
+      url: string;
+    }>;
+  }>;
+  documents?: Array<{
+    name: string;
+    url: string;
+  }>;
 }
 
 export interface RFPFormData {
@@ -58,6 +82,10 @@ export interface RFPFormData {
     size: string;
   };
   status: 'draft' | 'published' | 'closed';
+  files?: Array<{
+    name: string;
+    url: string;
+  }>;
 }
 
 export interface AIAnalysisResult {

@@ -10,6 +10,7 @@ import type { RFPFormData } from '@/types/rfp';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { DocumentPlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const rfpSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -36,13 +37,33 @@ const rfpSchema = z.object({
 
 export default function CreateRfpPage() {
   const router = useRouter();
+  const { addRfp } = useRfpStore();
   const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [analysisSteps, setAnalysisSteps] = useState<{ step: string; status: 'pending' | 'processing' | 'completed' }[]>([]);
-  const { isAnalyzing, setIsAnalyzing, addRfp } = useRfpStore();
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [formData, setFormData] = useState<RFPFormData | null>(null);
+  const [uploadState, setUploadState] = useState<
+    'idle' | 
+    'uploading' | 
+    'scanning' |
+    'analyzing' | 
+    'extracting' |
+    'completed' | 
+    'error'
+  >('idle');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentStage, setCurrentStage] = useState<{
+    stage: string;
+    progress: number;
+  }>({ stage: '', progress: 0 });
+  const [uploadedFile, setUploadedFile] = useState<{
+    name: string;
+    size: string;
+    extractedFields: string[];
+  } | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -52,7 +73,6 @@ export default function CreateRfpPage() {
   } = useForm<RFPFormData>({
     resolver: zodResolver(rfpSchema),
     defaultValues: {
-      status: 'draft',
       requirements: [],
       certifications: [],
       compliance: [],
@@ -62,11 +82,8 @@ export default function CreateRfpPage() {
         experience: '',
         size: ''
       },
-      company: {
-        id: user?.email || `guest_${Date.now()}`,
-        name: user?.companyName || 'My Company',
-      }
-    },
+      status: 'draft'
+    }
   });
 
   const requirements = watch('requirements');
@@ -75,98 +92,130 @@ export default function CreateRfpPage() {
   const industryStandards = watch('industryStandards');
   const teamRoles = watch('teamRequirements.roles');
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploadedFile(file);
-    setIsUploading(true);
-    setIsAnalyzing(true);
-    
-    // Initialize analysis steps
-    setAnalysisSteps([
-      { step: 'Uploading document', status: 'pending' },
-      { step: 'Extracting text content', status: 'pending' },
-      { step: 'Analyzing document structure', status: 'pending' },
-      { step: 'Identifying key requirements', status: 'pending' },
-      { step: 'Estimating budget and timeline', status: 'pending' },
-      { step: 'Generating final analysis', status: 'pending' },
-    ]);
+    // Reset states
+    setUploadState('uploading');
+    setUploadProgress(0);
+    setCurrentStage({ stage: 'Uploading document', progress: 0 });
+    setUploadedFile({
+      name: file.name,
+      size: formatFileSize(file.size),
+      extractedFields: []
+    });
 
     try {
-      // Simulate document upload
-      setAnalysisSteps(steps => steps.map((step, i) => 
-        i === 0 ? { ...step, status: 'processing' } : step
-      ));
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setAnalysisSteps(steps => steps.map((step, i) => 
-        i === 0 ? { ...step, status: 'completed' } : 
-        i === 1 ? { ...step, status: 'processing' } : step
-      ));
+      // Stage 1: Uploading
+      await new Promise<void>((resolve) => {
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 5;
+          setCurrentStage(prev => ({ ...prev, progress }));
+          if (progress >= 100) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
 
-      // Simulate text extraction
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setAnalysisSteps(steps => steps.map((step, i) => 
-        i === 1 ? { ...step, status: 'completed' } : 
-        i === 2 ? { ...step, status: 'processing' } : step
-      ));
+      // Stage 2: Scanning
+      setUploadState('scanning');
+      setCurrentStage({ stage: 'Scanning document for content', progress: 0 });
+      await new Promise<void>((resolve) => {
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 10;
+          setCurrentStage(prev => ({ ...prev, progress }));
+          if (progress >= 100) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
 
-      // Simulate document structure analysis
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      setAnalysisSteps(steps => steps.map((step, i) => 
-        i === 2 ? { ...step, status: 'completed' } : 
-        i === 3 ? { ...step, status: 'processing' } : step
-      ));
+      // Stage 3: Analyzing
+      setUploadState('analyzing');
+      setCurrentStage({ stage: 'Analyzing content', progress: 0 });
+      await new Promise<void>((resolve) => {
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 8;
+          setCurrentStage(prev => ({ ...prev, progress }));
+          if (progress >= 100) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
 
-      // Simulate requirements identification
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setAnalysisSteps(steps => steps.map((step, i) => 
-        i === 3 ? { ...step, status: 'completed' } : 
-        i === 4 ? { ...step, status: 'processing' } : step
-      ));
+      // Stage 4: Extracting
+      setUploadState('extracting');
+      setCurrentStage({ stage: 'Extracting information', progress: 0 });
+      setIsAnalyzing(true);
 
-      // Simulate budget and timeline estimation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setAnalysisSteps(steps => steps.map((step, i) => 
-        i === 4 ? { ...step, status: 'completed' } : 
-        i === 5 ? { ...step, status: 'processing' } : step
-      ));
+      // Start progress animation for extraction
+      const extractionInterval = setInterval(() => {
+        setCurrentStage(prev => ({
+          ...prev,
+          progress: Math.min(prev.progress + 5, 90)
+        }));
+      }, 100);
 
-      const analysis = await analyzeDocument(file);
+      const result = await analyzeDocument(file);
+      clearInterval(extractionInterval);
       
-      // Mark final step as completed
-      setAnalysisSteps(steps => steps.map(step => ({ ...step, status: 'completed' })));
-
-      // Populate form with AI analysis results
-      setValue('title', analysis.title);
-      setValue('description', analysis.description);
-      setValue('budget', analysis.estimatedBudget);
-      setValue('deadline', analysis.suggestedDeadline);
-      setValue('category', analysis.suggestedCategory);
-      setValue('requirements', analysis.keyRequirements);
-      setValue('certifications', analysis.certifications);
-      setValue('compliance', analysis.compliance);
-      setValue('industryStandards', analysis.industryStandards);
-      setValue('teamRequirements', analysis.teamRequirements);
-
-      // Show success toast
-      toast.success('Document analysis completed successfully', {
-        position: 'top-center',
-        duration: 3000,
+      // Set budget and deadline with reasonable values
+      const today = new Date();
+      const threeMonthsFromNow = new Date(today.setMonth(today.getMonth() + 3));
+      setValue('budget', '$50,000 - $100,000');
+      setValue('deadline', threeMonthsFromNow.toISOString().split('T')[0]);
+      setValue('category', 'Software Development');
+      
+      // Update form with AI analysis results
+      const extractedFields: Array<{ field: string; value: string }> = [];
+      Object.entries(result).forEach(([key, value]) => {
+        setValue(key as any, value);
+        if (value) {
+          extractedFields.push({
+            field: key,
+            value: typeof value === 'string' ? value : Array.isArray(value) ? `${value.length} items` : 'Updated'
+          });
+        }
       });
+      
+      // Add budget, deadline, and category to extracted fields
+      extractedFields.push(
+        { field: 'budget', value: '$50,000 - $100,000' },
+        { field: 'deadline', value: threeMonthsFromNow.toLocaleDateString() },
+        { field: 'category', value: 'Software Development' }
+      );
+      
+      // Update uploaded file info with extracted fields
+      setUploadedFile(prev => prev ? {
+        ...prev,
+        extractedFields: extractedFields.map(ef => ef.field)
+      } : null);
+      
+      // Complete with 100% progress
+      setCurrentStage({ stage: 'Completed', progress: 100 });
+      setUploadState('completed');
+      toast.success('Document analyzed successfully');
     } catch (error) {
-      console.error('Error analyzing document:', error);
-      toast.error('Error analyzing document. Please try again.', {
-        position: 'top-center',
-        duration: 3000,
-      });
-      setUploadedFile(null);
+      setUploadState('error');
+      setCurrentStage({ stage: 'Error', progress: 0 });
+      toast.error('Error analyzing document');
     } finally {
-      setTimeout(() => {
-        setIsUploading(false);
-        setIsAnalyzing(false);
-        setAnalysisSteps([]);
-      }, 1000);
+      setIsAnalyzing(false);
     }
   };
 
@@ -205,8 +254,15 @@ export default function CreateRfpPage() {
   };
 
   const onSubmit = async (data: RFPFormData) => {
+    setFormData(data);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!formData) return;
+    
     const newRfp = {
-      ...data,
+      ...formData,
       id: `rfp_${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -220,434 +276,528 @@ export default function CreateRfpPage() {
     };
 
     addRfp(newRfp);
-    toast.success('RFP draft has been created successfully', {
-      position: 'top-center',
-      duration: 3000,
-    });
+    toast.success('RFP draft has been created successfully');
     router.push('/rfp/manage');
   };
 
-  return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="border-b border-gray-200 pb-5">
-        <h3 className="text-2xl font-semibold leading-6 text-gray-900">
-          Create New RFP
-        </h3>
-      </div>
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  {...register('title')}
+                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  placeholder="Enter RFP title"
+                />
+                {errors.title && (
+                  <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                )}
+              </div>
 
-      <div className="mt-6">
-        {/* Document Upload Section */}
-        <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700">
-            Upload RFP Document
-          </label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              {!isAnalyzing ? (
-                uploadedFile ? (
-                  <div className="max-w-md mx-auto bg-green-50 p-6 rounded-lg">
-                    <div className="flex items-center justify-center mb-4">
-                      <svg className="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-medium text-green-800 mb-2">
-                      Document Successfully Analyzed
-                    </h4>
-                    <p className="text-sm text-green-600 mb-4">
-                      {uploadedFile.name}
-                    </p>
-                    <div className="text-xs text-green-500">
-                      Size: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Category
+                </label>
+                <select
+                  {...register('category')}
+                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
+                  <option value="">Select a category</option>
+                  <option value="Software Development">Software Development</option>
+                  <option value="Cloud Services">Cloud Services</option>
+                  <option value="Mobile Development">Mobile Development</option>
+                  <option value="IT Infrastructure">IT Infrastructure</option>
+                  <option value="Consulting">Consulting</option>
+                  <option value="Data Analytics">Data Analytics</option>
+                  <option value="Artificial Intelligence">Artificial Intelligence</option>
+                  <option value="Blockchain">Blockchain</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                  <option value="IoT Development">IoT Development</option>
+                </select>
+                {errors.category && (
+                  <p className="mt-1 text-sm text-red-600">{errors.category.message}</p>
+                )}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  {...register('description')}
+                  rows={4}
+                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  placeholder="Provide a detailed description of your project"
+                />
+                {errors.description && (
+                  <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Budget Range
+                </label>
+                <input
+                  type="text"
+                  {...register('budget')}
+                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                  placeholder="e.g., $50,000 - $100,000"
+                />
+                {errors.budget && (
+                  <p className="mt-1 text-sm text-red-600">{errors.budget.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Deadline
+                </label>
+                <input
+                  type="date"
+                  {...register('deadline')}
+                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                />
+                {errors.deadline && (
+                  <p className="mt-1 text-sm text-red-600">{errors.deadline.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Technical Requirements</h3>
+              <div className="space-y-3">
+                {requirements.map((_, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      {...register(`requirements.${index}`)}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      placeholder="Add a technical requirement"
+                    />
                     <button
                       type="button"
-                      onClick={() => {
-                        setUploadedFile(null);
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = '';
-                        }
-                      }}
-                      className="mt-4 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      onClick={() => removeArrayItem('requirements', index)}
+                      className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
-                      Upload Different File
+                      <XMarkIcon className="h-5 w-5" />
                     </button>
                   </div>
-                ) : (
-                  <>
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 48 48"
-                      aria-hidden="true"
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addArrayItem('requirements')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Add Requirement
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Required Certifications</h3>
+              <div className="space-y-3">
+                {certifications.map((_, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      {...register(`certifications.${index}`)}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      placeholder="Add a required certification"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem('certifications', index)}
+                      className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
-                      <path
-                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <div className="flex text-sm text-gray-600">
-                      <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                        <span>Upload a file</span>
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addArrayItem('certifications')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Add Certification
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Team Requirements</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Required Roles</label>
+                  <div className="mt-2 space-y-3">
+                    {teamRoles.map((_, index) => (
+                      <div key={index} className="flex gap-2">
                         <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="sr-only"
-                          accept=".pdf,.doc,.docx"
-                          onChange={handleFileUpload}
-                          disabled={isUploading || isAnalyzing}
+                          {...register(`teamRequirements.roles.${index}`)}
+                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="Add a required role"
                         />
-                      </label>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-gray-500">PDF, DOC, DOCX up to 10MB</p>
-                  </>
-                )
-              ) : (
-                <div className="max-w-md mx-auto">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">
-                    AI Analysis in Progress
-                  </h4>
-                  <div className="space-y-4">
-                    {analysisSteps.map((step, index) => (
-                      <div key={index} className="flex items-center">
-                        <div className="flex-shrink-0 h-6 w-6">
-                          {step.status === 'completed' ? (
-                            <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          ) : step.status === 'processing' ? (
-                            <svg className="h-6 w-6 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
-                          ) : (
-                            <div className="h-6 w-6 border-2 border-gray-300 rounded-full" />
-                          )}
-                        </div>
-                        <div className="ml-3">
-                          <p className={`text-sm ${
-                            step.status === 'completed' ? 'text-green-800' :
-                            step.status === 'processing' ? 'text-indigo-800' :
-                            'text-gray-500'
-                          }`}>
-                            {step.step}
-                          </p>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeArrayItem('teamRequirements.roles', index)}
+                          className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
                       </div>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => addArrayItem('teamRequirements.roles')}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    >
+                      Add Role
+                    </button>
                   </div>
-                  <p className="mt-4 text-sm text-gray-500 text-center">
-                    Please wait while our AI analyzes your document...
-                  </p>
                 </div>
-              )}
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Experience Level
+                    </label>
+                    <input
+                      {...register('teamRequirements.experience')}
+                      className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      placeholder="e.g., 5+ years in enterprise solutions"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Team Size
+                    </label>
+                    <input
+                      {...register('teamRequirements.size')}
+                      className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      placeholder="e.g., 5-7 team members"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Compliance & Standards</h3>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Compliance Requirements</label>
+                  <div className="mt-2 space-y-3">
+                    {compliance.map((_, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          {...register(`compliance.${index}`)}
+                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="Add a compliance requirement"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeArrayItem('compliance', index)}
+                          className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addArrayItem('compliance')}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    >
+                      Add Compliance
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Industry Standards</label>
+                  <div className="mt-2 space-y-3">
+                    {industryStandards.map((_, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          {...register(`industryStandards.${index}`)}
+                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="Add an industry standard"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeArrayItem('industryStandards', index)}
+                          className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addArrayItem('industryStandards')}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    >
+                      Add Standard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                <div>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-100">
+                    <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="mt-3 text-center sm:mt-5">
+                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                      Create RFP
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Are you sure you want to create this RFP? You can edit it later from the RFP management page.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                  <button
+                    type="button"
+                    className="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 sm:col-start-2"
+                    onClick={handleConfirm}
+                  >
+                    Create RFP
+                  </button>
+                  <button
+                    type="button"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    onClick={() => setShowConfirmDialog(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* RFP Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Basic Information */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                type="text"
-                {...register('title')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-              )}
+      )}
+      
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white rounded-2xl shadow-soft hover:shadow-glow transition-all duration-300">
+          <div className="p-6 sm:p-8">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                Create New RFP
+              </h1>
+              <p className="mt-2 text-gray-600">
+                Fill out the form below to create a new Request for Proposal. You can also upload a document to auto-fill the form.
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Budget
-              </label>
-              <input
-                type="text"
-                {...register('budget')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-              {errors.budget && (
-                <p className="mt-1 text-sm text-red-600">{errors.budget.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Deadline
-              </label>
-              <input
-                type="date"
-                {...register('deadline')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-              {errors.deadline && (
-                <p className="mt-1 text-sm text-red-600">{errors.deadline.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Category
-              </label>
-              <select
-                {...register('category')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="">Select a category</option>
-                <option value="Software Development">Software Development</option>
-                <option value="Cloud Services">Cloud Services</option>
-                <option value="Mobile Development">Mobile Development</option>
-                <option value="IT Infrastructure">IT Infrastructure</option>
-                <option value="Consulting">Consulting</option>
-                <option value="Data Analytics">Data Analytics</option>
-                <option value="Artificial Intelligence">Artificial Intelligence</option>
-              </select>
-              {errors.category && (
-                <p className="mt-1 text-sm text-red-600">{errors.category.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Status
-              </label>
-              <select
-                {...register('status')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-            )}
-          </div>
-
-          {/* Requirements Section */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Project Requirements</h3>
-            <div className="space-y-4">
-              {/* Technical Requirements */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Technical Requirements
-                </label>
-                <div className="mt-2 space-y-2">
-                  {requirements?.map((_, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        {...register(`requirements.${index}`)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
+            {/* Document Upload */}
+            <div className="mb-8">
+              <div className="max-w-xl">
+                <label
+                  htmlFor="file-upload"
+                  className={`relative block w-full rounded-lg border-2 border-dashed p-6 text-center focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer transition-all duration-300 ${
+                    uploadState === 'error' 
+                      ? 'border-red-300 hover:border-red-400' 
+                      : uploadState === 'completed'
+                      ? 'border-green-300 hover:border-green-400'
+                      : 'border-gray-300 hover:border-primary-400'
+                  }`}
+                >
+                  <DocumentPlusIcon className={`mx-auto h-12 w-12 transition-colors duration-300 ${
+                    uploadState === 'error' 
+                      ? 'text-red-400' 
+                      : uploadState === 'completed'
+                      ? 'text-green-400'
+                      : uploadState === 'uploading' || uploadState === 'scanning' || uploadState === 'analyzing' || uploadState === 'extracting'
+                      ? 'text-primary-400 animate-pulse'
+                      : 'text-gray-400'
+                  }`} />
+                  
+                  {uploadState === 'idle' && (
+                    <>
+                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                        Upload a document to auto-fill
+                      </span>
+                      <span className="mt-1 block text-sm text-gray-500">
+                        PDF, DOC, or DOCX up to 10MB
+                      </span>
+                    </>
+                  )}
+                  
+                  {(uploadState === 'uploading' || uploadState === 'scanning' || uploadState === 'analyzing' || uploadState === 'extracting') && (
+                    <div className="mt-4">
+                      <span className="block text-sm font-medium text-gray-900">
+                        {currentStage.stage}...
+                      </span>
+                      <div className="mt-2">
+                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary-500 transition-all duration-300"
+                            style={{ width: `${currentStage.progress}%` }}
+                          />
+                        </div>
+                        <span className="mt-2 block text-xs text-gray-500">
+                          {currentStage.progress}%
+                        </span>
+                      </div>
+                      <div className="mt-3 text-xs text-gray-500">
+                        {uploadState === 'uploading' && 'Uploading your document...'}
+                        {uploadState === 'scanning' && 'Scanning document for content...'}
+                        {uploadState === 'analyzing' && 'Analyzing document structure...'}
+                        {uploadState === 'extracting' && 'Extracting relevant information...'}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {uploadState === 'completed' && uploadedFile && (
+                    <div className="mt-4 text-left">
+                      <div className="flex items-center gap-2">
+                        <DocumentPlusIcon className="h-5 w-5 text-green-500" />
+                        <span className="font-medium text-gray-900">{uploadedFile.name}</span>
+                        <span className="text-sm text-gray-500">({uploadedFile.size})</span>
+                      </div>
+                      <div className="mt-3">
+                        <h4 className="text-sm font-medium text-gray-900">Extracted Information:</h4>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {uploadedFile.extractedFields.map((field) => (
+                            <span
+                              key={field}
+                              className="inline-flex items-center rounded-full bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
+                            >
+                              {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p>Budget set to: $50,000 - $100,000</p>
+                          <p>Deadline set to: {new Date(watch('deadline')).toLocaleDateString()}</p>
+                        </div>
+                      </div>
                       <button
-                        type="button"
-                        onClick={() => removeArrayItem('requirements', index)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="mt-3 text-sm text-primary-600 hover:text-primary-500 font-medium"
                       >
-                        Remove
+                        Replace document
                       </button>
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('requirements')}
-                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Requirement
-                  </button>
-                </div>
-              </div>
-
-              {/* Certifications */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Required Certifications
-                </label>
-                <div className="mt-2 space-y-2">
-                  {certifications?.map((_, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        {...register(`certifications.${index}`)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem('certifications', index)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        Remove
-                      </button>
+                  )}
+                  
+                  {uploadState === 'error' && (
+                    <div className="mt-2">
+                      <span className="block text-sm font-medium text-red-600">
+                        Error analyzing document
+                      </span>
+                      <span className="mt-1 block text-sm text-gray-500">
+                        Please try again
+                      </span>
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('certifications')}
-                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Certification
-                  </button>
-                </div>
-              </div>
-
-              {/* Compliance Requirements */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Compliance Requirements
+                  )}
+                  
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept=".pdf,.doc,.docx"
+                  />
                 </label>
-                <div className="mt-2 space-y-2">
-                  {compliance?.map((_, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        {...register(`compliance.${index}`)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem('compliance', index)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('compliance')}
-                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Compliance Requirement
-                  </button>
-                </div>
-              </div>
-
-              {/* Industry Standards */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Industry Standards
-                </label>
-                <div className="mt-2 space-y-2">
-                  {industryStandards?.map((_, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        {...register(`industryStandards.${index}`)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem('industryStandards', index)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addArrayItem('industryStandards')}
-                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Industry Standard
-                  </button>
-                </div>
               </div>
             </div>
-          </div>
 
-          {/* Team Requirements */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Team Requirements</h3>
-            <div className="space-y-4">
-              {/* Team Roles */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Required Team Roles
-                </label>
-                <div className="mt-2 space-y-2">
-                  {teamRoles?.map((_, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        {...register(`teamRequirements.roles.${index}`)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem('teamRequirements.roles', index)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+            {/* Progress Steps */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center">
+                {[1, 2, 3].map((step) => (
                   <button
-                    type="button"
-                    onClick={() => addArrayItem('teamRequirements.roles')}
-                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    key={step}
+                    onClick={() => setCurrentStep(step)}
+                    className={`flex-1 text-center py-2 ${
+                      currentStep === step
+                        ? 'border-b-2 border-primary-500 text-primary-600 font-medium'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
                   >
-                    Add Team Role
+                    {step === 1 ? 'Basic Info' : step === 2 ? 'Requirements' : 'Team & Compliance'}
                   </button>
-                </div>
-              </div>
-
-              {/* Experience */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Required Experience
-                </label>
-                <input
-                  {...register('teamRequirements.experience')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="e.g., 5+ years in enterprise solutions"
-                />
-              </div>
-
-              {/* Team Size */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Team Size
-                </label>
-                <input
-                  {...register('teamRequirements.size')}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="e.g., 8-12 team members"
-                />
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Saving...' : 'Create a draft'}
-            </button>
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              {renderStep()}
+
+              {/* Navigation Buttons */}
+              <div className="mt-8 flex justify-between">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    Previous
+                  </button>
+                )}
+                <div className="flex-1" />
+                {currentStep < 3 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(currentStep + 1)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create RFP'}
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

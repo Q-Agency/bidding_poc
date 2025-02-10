@@ -46,7 +46,7 @@ export default function CreateBidPage() {
   const { rfps, createBid, updateBid, submitBid } = useRfpStore();
   const [currentRfp, setCurrentRfp] = useState(rfps.find(r => r.id === params.id));
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStep, setAnalysisStep] = useState<'upload' | 'extracting' | 'analyzing' | 'complete'>('upload');
+  const [analysisStep, setAnalysisStep] = useState<'extracting' | 'analyzing' | 'complete'>('extracting');
   const [processingText, setProcessingText] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +55,7 @@ export default function CreateBidPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [uncoveredRequirements, setUncoveredRequirements] = useState<string[]>([]);
-  const [requirementsCoverage, setRequirementsCoverage] = useState<{[key: string]: boolean}>({});
+  const [requirementsCoverage, setRequirementsCoverage] = useState<Record<string, boolean>>({});
 
   const {
     register,
@@ -98,47 +98,37 @@ export default function CreateBidPage() {
   const checkRequirementsCoverage = (formData: any) => {
     if (!currentRfp) return;
 
-    const coverage: {[key: string]: boolean} = {};
+    const coveredReqs: Record<string, boolean> = {};
     const uncovered: string[] = [];
 
-    // Check technical requirements coverage
     currentRfp.requirements.forEach(req => {
-      const isCovered = 
-        formData.technicalProposal?.toLowerCase().includes(req.toLowerCase()) ||
-        formData.technicalApproach?.toLowerCase().includes(req.toLowerCase()) ||
-        formData.methodology?.toLowerCase().includes(req.toLowerCase());
-      
-      coverage[req] = isCovered;
-      if (!isCovered) {
+      const isAddressed = 
+        (formData.technicalProposal?.toLowerCase() || '').includes(req.toLowerCase()) ||
+        (formData.technicalApproach?.toLowerCase() || '').includes(req.toLowerCase()) ||
+        (formData.methodology?.toLowerCase() || '').includes(req.toLowerCase()) ||
+        (formData.deliverables || []).some((d: string) => (d || '').toLowerCase().includes(req.toLowerCase())) ||
+        (formData.projectMilestones || []).some((m: any) => 
+          ((m?.title || '').toLowerCase().includes(req.toLowerCase()) ||
+          (m?.description || '').toLowerCase().includes(req.toLowerCase()))
+        );
+
+      coveredReqs[req] = isAddressed;
+      if (!isAddressed) {
         uncovered.push(req);
       }
     });
 
-    // Check certification requirements coverage
-    currentRfp.certifications.forEach(cert => {
-      const isCovered = formData.teamComposition?.some((member: any) => 
-        member.certifications?.some((c: string) => c.toLowerCase() === cert.toLowerCase())
-      );
-      coverage[cert] = isCovered;
-      if (!isCovered) {
-        uncovered.push(cert);
-      }
-    });
-
-    // Check compliance requirements coverage
-    currentRfp.compliance.forEach(comp => {
-      const isCovered = 
-        formData.qualityAssurance?.toLowerCase().includes(comp.toLowerCase()) ||
-        formData.riskMitigation?.toLowerCase().includes(comp.toLowerCase());
-      coverage[comp] = isCovered;
-      if (!isCovered) {
-        uncovered.push(comp);
-      }
-    });
-
-    setRequirementsCoverage(coverage);
+    setRequirementsCoverage(coveredReqs);
     setUncoveredRequirements(uncovered);
   };
+
+  // Update requirements coverage whenever form values change
+  useEffect(() => {
+    const subscription = watch((value) => {
+      checkRequirementsCoverage(value);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, currentRfp]);
 
   // Watch specific form fields instead of all values
   const technicalProposal = watch('technicalProposal');
@@ -172,6 +162,25 @@ export default function CreateBidPage() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !currentRfp) return;
+
+    // Clear all form data and states
+    setUploadedFile(null);
+    setAnalysisStep('extracting');
+    setProcessingText('');
+    setRequirementsCoverage({});
+    setUncoveredRequirements([]);
+    
+    // Reset all form fields
+    setValue('proposedBudget', '');
+    setValue('proposedTimeline', '');
+    setValue('technicalProposal', '');
+    setValue('technicalApproach', '');
+    setValue('methodology', '');
+    setValue('deliverables', ['']);
+    setValue('projectMilestones', [{ title: '', duration: '', description: '' }]);
+    setValue('teamComposition', [{ role: '', experience: '', certifications: [] }]);
+    setValue('qualityAssurance', '');
+    setValue('riskMitigation', '');
 
     setUploadedFile(file);
     setAnalysisStep('extracting');
@@ -333,466 +342,526 @@ export default function CreateBidPage() {
   }
 
   return (
-    <>
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="border-b border-gray-200 pb-5">
-          <h3 className="text-2xl font-semibold leading-6 text-gray-900">
-            Submit Bid
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            for {currentRfp.title}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                Submit Bid
+              </h1>
+              <p className="mt-2 text-gray-600">
+                for {currentRfp.title}
+              </p>
+            </div>
+            <div className="flex items-center gap-4 mt-4 sm:mt-0">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="bidForm"
+                disabled={formIsSubmitting}
+                className="btn-primary"
+              >
+                {formIsSubmitting ? 'Submitting...' : 'Submit Bid'}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6">
-          {/* AI Analysis Flow */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700">
-              Upload Proposal Document
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+        {/* Main Content */}
+        <div className="space-y-8">
+          {/* AI Analysis Card */}
+          <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
+            <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-6">
+              Document Analysis
+            </h2>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-xl hover:border-primary-400 transition-colors duration-200">
               <div className="space-y-1 text-center">
-                {!isAnalyzing ? (
-                  uploadedFile ? (
-                    <div className="max-w-md mx-auto bg-green-50 p-6 rounded-lg">
-                      <div className="flex items-center justify-center mb-4">
-                        <svg className="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <h4 className="text-lg font-medium text-green-800 mb-2">
-                        Document Analysis Complete
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-sm font-medium text-green-700">
-                            {uploadedFile.name}
-                          </p>
-                          <p className="text-xs text-green-600">
-                            Size: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                        <div className="border-t border-green-200 pt-3">
-                          <h5 className="text-sm font-medium text-green-800 mb-2">Analysis Results:</h5>
-                          <ul className="text-sm text-green-700 space-y-1">
-                            <li className="flex items-center">
-                              <svg className="h-4 w-4 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Technical requirements extracted
-                            </li>
-                            <li className="flex items-center">
-                              <svg className="h-4 w-4 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Team composition identified
-                            </li>
-                            <li className="flex items-center">
-                              <svg className="h-4 w-4 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Budget and timeline estimated
-                            </li>
-                          </ul>
-                        </div>
-                        <div className="border-t border-green-200 pt-3">
-                          <p className="text-sm text-green-700">
-                            Please review the extracted information below and make any necessary adjustments before submitting your bid.
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUploadedFile(null);
-                          if (fileInputRef.current) {
-                            fileInputRef.current.value = '';
-                          }
-                        }}
-                        className="mt-4 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      >
-                        Upload Different File
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 48 48"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                {!isAnalyzing && !uploadedFile && (
+                  <>
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <label className="relative cursor-pointer rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                        <span>Upload a file</span>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="sr-only"
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleFileUpload}
+                          disabled={isAnalyzing}
                         />
-                      </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                          <span>Upload a file</span>
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            className="sr-only"
-                            accept=".pdf,.doc,.docx"
-                            onChange={handleFileUpload}
-                            disabled={isAnalyzing}
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">PDF, DOC, DOCX up to 10MB</p>
+                  </>
+                )}
+                {isAnalyzing && (
+                  <div className="text-center py-12">
+                    <div className="flex flex-col items-center justify-center">
+                      {/* Large centered animation container */}
+                      <div className="relative w-32 h-32 mb-8">
+                        {/* Simple background circle with subtle gradient */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 animate-pulse"></div>
+                        
+                        {/* Processing icon with minimal animation */}
+                        {analysisStep === 'extracting' && (
+                          <div className="absolute inset-0 flex items-center justify-center animate-float">
+                            <DocumentTextIcon className="h-20 w-20 text-primary-600" />
+                          </div>
+                        )}
+                        {analysisStep === 'analyzing' && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <BeakerIcon className="h-20 w-20 text-secondary-600 animate-bounce" />
+                          </div>
+                        )}
+                        {analysisStep === 'complete' && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <CheckCircleIcon className="h-20 w-20 text-green-500 animate-scale" />
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500">PDF, DOC, DOCX up to 10MB</p>
-                    </>
-                  )
-                ) : (
-                  <div className="max-w-md mx-auto">
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">
-                      AI Analysis in Progress
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-6 w-6">
-                          <svg className="h-6 w-6 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-indigo-800">{processingText}</p>
-                        </div>
+                      
+                      {/* Large status text */}
+                      <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 bg-300% animate-gradient bg-clip-text text-transparent">
+                        {processingText}
+                      </h3>
+                      
+                      {/* Simplified progress bar */}
+                      <div className="w-64 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-700 ease-in-out"
+                          style={{ 
+                            width: analysisStep === 'extracting' ? '33%' : 
+                                   analysisStep === 'analyzing' ? '66%' : 
+                                   analysisStep === 'complete' ? '100%' : '0%' 
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Minimal stage indicators */}
+                      <div className="mt-4 flex justify-between w-64 text-sm">
+                        <span className={analysisStep === 'extracting' ? 'text-primary-600 font-medium' : 'text-gray-400'}>
+                          Extracting
+                        </span>
+                        <span className={analysisStep === 'analyzing' ? 'text-secondary-600 font-medium' : 'text-gray-400'}>
+                          Analyzing
+                        </span>
+                        <span className={analysisStep === 'complete' ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                          Complete
+                        </span>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm text-gray-500 text-center">
-                      Please wait while our AI analyzes your document...
-                    </p>
+                  </div>
+                )}
+                {!isAnalyzing && uploadedFile && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="flex items-center justify-center w-full">
+                      <div className="flex items-center justify-between w-full max-w-sm p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <DocumentTextIcon className="h-8 w-8 text-primary-500" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900">{uploadedFile.name}</span>
+                            <span className="text-xs text-gray-500">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadedFile(null);
+                            setAnalysisStep('extracting');
+                            setProcessingText('');
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          }}
+                          className="text-accent-600 hover:text-accent-700 transition-colors duration-200"
+                        >
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileUpload}
+                      disabled={isAnalyzing}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.click();
+                        }
+                      }}
+                      className="btn-secondary text-sm"
+                    >
+                      Replace File
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Requirements Coverage Information */}
-          {uncoveredRequirements.length > 0 && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-md">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
-                  </svg>
+          {/* RFP Requirements Card */}
+          <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                RFP Requirements
+              </h2>
+            </div>
+            <div className="space-y-6">
+              <div className="bg-primary-50 rounded-xl p-6">
+                <h3 className="text-lg font-medium text-primary-800 mb-4">
+                  Requirements to Address
+                </h3>
+                <div className="space-y-4">
+                  {currentRfp.requirements.map((req, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      {uploadedFile ? (
+                        <div className="flex-shrink-0 mt-1">
+                          {requirementsCoverage[req] ? (
+                            <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="h-5 w-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex-shrink-0 mt-1">
+                          <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <div>
+                        <p className={`${uploadedFile ? (requirementsCoverage[req] ? 'text-green-700' : 'text-primary-700') : 'text-gray-700'}`}>
+                          {req}
+                        </p>
+                        {uploadedFile && (
+                          <p className={`mt-1 text-sm ${requirementsCoverage[req] ? 'text-green-600' : 'text-primary-600'}`}>
+                            {requirementsCoverage[req] ? 'This requirement is addressed in your proposal.' : 'Please ensure your bid addresses this requirement.'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">
-                    Critical Requirements to Address
-                  </h3>
-                  <div className="mt-2 text-sm text-blue-700">
-                    <p className="mb-2">Please ensure your bid addresses the following key requirements:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {uncoveredRequirements.map((req, index) => (
-                        <li key={index}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bid Form */}
+          <form id="bidForm" onSubmit={handleSubmit(onSubmit)} className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300 space-y-8">
+            <div className="flex items-center gap-3 mb-6">
+              <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                Bid Details
+              </h2>
+            </div>
+
+            {/* Budget and Timeline Section */}
+            <div className="bg-primary-50/50 rounded-xl p-6 space-y-6">
+              <h3 className="text-lg font-medium text-primary-800 flex items-center gap-2">
+                <svg className="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Financial & Timeline
+              </h3>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="form-label">Proposed Budget</label>
+                  <input
+                    type="text"
+                    {...register('proposedBudget')}
+                    placeholder="e.g. $100,000"
+                    className="form-input bg-white"
+                  />
+                  {errors.proposedBudget && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.proposedBudget.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="form-label">Proposed Timeline</label>
+                  <input
+                    type="text"
+                    {...register('proposedTimeline')}
+                    placeholder="e.g. 6 months"
+                    className="form-input bg-white"
+                  />
+                  {errors.proposedTimeline && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.proposedTimeline.message}</p>
+                  )}
                 </div>
               </div>
             </div>
-          )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* Budget and Timeline */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Proposed Budget
-                </label>
-                <input
-                  type="text"
-                  {...register('proposedBudget')}
-                  placeholder="e.g. $100,000"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                />
-                {errors.proposedBudget && (
-                  <p className="mt-1 text-sm text-red-600">{errors.proposedBudget.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Proposed Timeline
-                </label>
-                <input
-                  type="text"
-                  {...register('proposedTimeline')}
-                  placeholder="e.g. 6 months"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                />
-                {errors.proposedTimeline && (
-                  <p className="mt-1 text-sm text-red-600">{errors.proposedTimeline.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Technical Proposal */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Technical Proposal Overview
-              </label>
-              <textarea
-                {...register('technicalProposal')}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Provide an overview of your technical proposal..."
-              />
-              {errors.technicalProposal && (
-                <p className="mt-1 text-sm text-red-600">{errors.technicalProposal.message}</p>
-              )}
-            </div>
-
-            {/* Technical Approach */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
+            {/* Technical Details Section */}
+            <div className="bg-secondary-50/50 rounded-xl p-6 space-y-6">
+              <h3 className="text-lg font-medium text-secondary-800 flex items-center gap-2">
+                <svg className="h-5 w-5 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
                 Technical Approach
-              </label>
-              <textarea
-                {...register('technicalApproach')}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Describe your technical approach..."
-              />
-              {errors.technicalApproach && (
-                <p className="mt-1 text-sm text-red-600">{errors.technicalApproach.message}</p>
-              )}
+              </h3>
+              <div className="space-y-6">
+                <div>
+                  <label className="form-label">Technical Proposal Overview</label>
+                  <textarea
+                    {...register('technicalProposal')}
+                    rows={4}
+                    className="form-input bg-white"
+                    placeholder="Provide an overview of your technical proposal..."
+                  />
+                  {errors.technicalProposal && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.technicalProposal.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="form-label">Technical Approach</label>
+                  <textarea
+                    {...register('technicalApproach')}
+                    rows={4}
+                    className="form-input bg-white"
+                    placeholder="Describe your technical approach..."
+                  />
+                  {errors.technicalApproach && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.technicalApproach.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="form-label">Methodology</label>
+                  <textarea
+                    {...register('methodology')}
+                    rows={4}
+                    className="form-input bg-white"
+                    placeholder="Describe your project methodology..."
+                  />
+                  {errors.methodology && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.methodology.message}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Methodology */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Methodology
-              </label>
-              <textarea
-                {...register('methodology')}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Describe your project methodology..."
-              />
-              {errors.methodology && (
-                <p className="mt-1 text-sm text-red-600">{errors.methodology.message}</p>
-              )}
-            </div>
-
-            {/* Deliverables */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Deliverables</h3>
+            {/* Deliverables Section */}
+            <div className="bg-green-50/50 rounded-xl p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-green-800 flex items-center gap-2">
+                  <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Deliverables
+                </h3>
                 <button
                   type="button"
                   onClick={addDeliverable}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="btn-secondary text-sm"
                 >
                   Add Deliverable
                 </button>
               </div>
               <div className="space-y-4">
                 {watch('deliverables').map((_, index) => (
-                  <div key={index} className="flex items-center gap-4">
+                  <div key={index} className="flex gap-4">
                     <input
-                      type="text"
                       {...register(`deliverables.${index}`)}
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Enter deliverable"
+                      className="form-input bg-white"
+                      placeholder="Enter deliverable..."
                     />
-                    {watch('deliverables').length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeDeliverable(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Remove
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeDeliverable(index)}
+                      className="btn-accent text-sm"
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Project Milestones */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Project Milestones</h3>
+            {/* Project Milestones Section */}
+            <div className="bg-blue-50/50 rounded-xl p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-blue-800 flex items-center gap-2">
+                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Project Milestones
+                </h3>
                 <button
                   type="button"
                   onClick={addMilestone}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="btn-secondary text-sm"
                 >
                   Add Milestone
                 </button>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {watch('projectMilestones').map((_, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Title
-                        </label>
-                        <input
-                          type="text"
-                          {...register(`projectMilestones.${index}.title`)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Duration
-                        </label>
-                        <input
-                          type="text"
-                          {...register(`projectMilestones.${index}.duration`)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Description
-                        </label>
-                        <textarea
-                          {...register(`projectMilestones.${index}.description`)}
-                          rows={2}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                      </div>
-                    </div>
-                    {watch('projectMilestones').length > 1 && (
+                  <div key={index} className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                    <input
+                      {...register(`projectMilestones.${index}.title`)}
+                      className="form-input"
+                      placeholder="Milestone title..."
+                    />
+                    <input
+                      {...register(`projectMilestones.${index}.duration`)}
+                      className="form-input"
+                      placeholder="Duration (e.g., 2 weeks)..."
+                    />
+                    <textarea
+                      {...register(`projectMilestones.${index}.description`)}
+                      className="form-input"
+                      placeholder="Milestone description..."
+                      rows={2}
+                    />
+                    <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={() => removeMilestone(index)}
-                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        className="btn-accent text-sm"
                       >
-                        Remove
+                        Remove Milestone
                       </button>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Team Composition */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Team Composition</h3>
+            {/* Team Composition Section */}
+            <div className="bg-purple-50/50 rounded-xl p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-purple-800 flex items-center gap-2">
+                  <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  Team Composition
+                </h3>
                 <button
                   type="button"
                   onClick={addTeamMember}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="btn-secondary text-sm"
                 >
                   Add Team Member
                 </button>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {watch('teamComposition').map((_, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Role
-                        </label>
-                        <input
-                          type="text"
-                          {...register(`teamComposition.${index}.role`)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Experience
-                        </label>
-                        <input
-                          type="text"
-                          {...register(`teamComposition.${index}.experience`)}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                      </div>
-                    </div>
-                    {watch('teamComposition').length > 1 && (
+                  <div key={index} className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                    <input
+                      {...register(`teamComposition.${index}.role`)}
+                      className="form-input"
+                      placeholder="Role (e.g., Project Manager)..."
+                    />
+                    <input
+                      {...register(`teamComposition.${index}.experience`)}
+                      className="form-input"
+                      placeholder="Experience (e.g., 5+ years)..."
+                    />
+                    <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={() => removeTeamMember(index)}
-                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        className="btn-accent text-sm"
                       >
-                        Remove
+                        Remove Member
                       </button>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Quality Assurance */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Quality Assurance Plan
-              </label>
-              <textarea
-                {...register('qualityAssurance')}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Describe your quality assurance approach..."
-              />
-              {errors.qualityAssurance && (
-                <p className="mt-1 text-sm text-red-600">{errors.qualityAssurance.message}</p>
-              )}
-            </div>
+            {/* Quality & Risk Section */}
+            <div className="bg-yellow-50/50 rounded-xl p-6 space-y-6">
+              <h3 className="text-lg font-medium text-yellow-800 flex items-center gap-2">
+                <svg className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Quality & Risk Management
+              </h3>
+              <div className="space-y-6">
+                <div>
+                  <label className="form-label">Quality Assurance Plan</label>
+                  <textarea
+                    {...register('qualityAssurance')}
+                    rows={4}
+                    className="form-input bg-white"
+                    placeholder="Describe your quality assurance approach..."
+                  />
+                  {errors.qualityAssurance && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.qualityAssurance.message}</p>
+                  )}
+                </div>
 
-            {/* Risk Mitigation */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Risk Mitigation Strategy
-              </label>
-              <textarea
-                {...register('riskMitigation')}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Describe your risk mitigation strategy..."
-              />
-              {errors.riskMitigation && (
-                <p className="mt-1 text-sm text-red-600">{errors.riskMitigation.message}</p>
-              )}
-            </div>
-
-            {/* Requirements Coverage Indicators */}
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-gray-900">Requirements Coverage</h3>
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {Object.entries(requirementsCoverage).map(([requirement, isCovered]) => (
-                  <div
-                    key={requirement}
-                    className={`flex items-center p-3 rounded-md ${
-                      isCovered ? 'bg-green-50' : 'bg-yellow-50'
-                    }`}
-                  >
-                    {isCovered ? (
-                      <CheckCircleIcon className="h-5 w-5 text-green-400 mr-2" />
-                    ) : (
-                      <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400 mr-2" />
-                    )}
-                    <span className={`text-sm ${isCovered ? 'text-green-700' : 'text-yellow-700'}`}>
-                      {requirement}
-                    </span>
-                  </div>
-                ))}
+                <div>
+                  <label className="form-label">Risk Mitigation Strategy</label>
+                  <textarea
+                    {...register('riskMitigation')}
+                    rows={4}
+                    className="form-input bg-white"
+                    placeholder="Describe your risk mitigation strategy..."
+                  />
+                  {errors.riskMitigation && (
+                    <p className="mt-1 text-sm text-accent-600">{errors.riskMitigation.message}</p>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Additional Supporting Documents */}
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Additional Supporting Documents</h3>
+            {/* Additional Files Section */}
+            <div className="bg-gray-50/50 rounded-xl p-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  Supporting Documents
+                </h3>
                 <button
                   type="button"
                   onClick={() => additionalFilesRef.current?.click()}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="btn-secondary text-sm"
                 >
                   Add Files
                 </button>
@@ -805,22 +874,18 @@ export default function CreateBidPage() {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                 />
               </div>
-              
               {additionalFiles.length > 0 && (
-                <ul className="mt-4 divide-y divide-gray-200">
+                <ul className="divide-y divide-gray-200 bg-white rounded-lg overflow-hidden">
                   {additionalFiles.map((file, index) => (
-                    <li key={index} className="py-3 flex justify-between items-center">
+                    <li key={index} className="px-4 py-3 flex justify-between items-center hover:bg-gray-50">
                       <div className="flex items-center">
-                        <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-2" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                          <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                        </div>
+                        <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-3" />
+                        <span className="text-sm text-gray-900">{file.name}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeAdditionalFile(index)}
-                        className="text-sm text-red-600 hover:text-red-800"
+                        className="text-accent-600 hover:text-accent-700 text-sm font-medium"
                       >
                         Remove
                       </button>
@@ -828,32 +893,6 @@ export default function CreateBidPage() {
                   ))}
                 </ul>
               )}
-              
-              {additionalFiles.length === 0 && (
-                <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-gray-300 border-dashed">
-                  <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">Upload additional supporting documents</p>
-                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX up to 10MB each</p>
-                </div>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <div className="mt-6 flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={formIsSubmitting}
-                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                {formIsSubmitting ? 'Submitting...' : 'Submit Bid'}
-              </button>
             </div>
           </form>
         </div>
@@ -861,7 +900,7 @@ export default function CreateBidPage() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-10 overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -869,20 +908,18 @@ export default function CreateBidPage() {
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white rounded-xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative z-50">
               <div>
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                  <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                  <CheckCircleIcon className="h-6 w-6 text-green-600" aria-hidden="true" />
                 </div>
                 <div className="mt-3 text-center sm:mt-5">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Confirm Bid Submission
+                    Ready to Submit Your Bid
                   </h3>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">
-                      Are you sure you want to submit this bid? Once submitted, it cannot be modified.
+                      Please review your bid details carefully. Once submitted, you won't be able to make changes.
                     </p>
                   </div>
                 </div>
@@ -892,15 +929,15 @@ export default function CreateBidPage() {
                   type="button"
                   onClick={() => handleConfirmSubmit(getValues())}
                   disabled={formIsSubmitting}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm disabled:opacity-50"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm transition-colors duration-200"
                 >
-                  {formIsSubmitting ? 'Submitting...' : 'Confirm Submit'}
+                  {formIsSubmitting ? 'Submitting...' : 'Submit Bid'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={formIsSubmitting}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:col-start-1 sm:text-sm transition-colors duration-200"
                 >
                   Cancel
                 </button>
@@ -909,6 +946,6 @@ export default function CreateBidPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 } 

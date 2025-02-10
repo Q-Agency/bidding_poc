@@ -76,149 +76,163 @@ export default function ManageRfpsPage() {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold leading-6 text-gray-900">My RFPs</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage your Request for Proposals and review submitted bids
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                My RFPs
+              </h1>
+              <p className="mt-2 text-gray-600">
+                Manage your Request for Proposals and review submitted bids
+              </p>
+            </div>
+            <div className="mt-4 sm:mt-0">
+              <button
+                onClick={() => router.push('/rfp/create')}
+                className="btn-primary"
+              >
+                Create New RFP
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button
-            onClick={() => router.push('/rfp/create')}
-            className="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Create New RFP
-          </button>
-        </div>
-      </div>
 
-      <div className="mt-4 flex flex-col sm:flex-row gap-4 items-center">
-        <div className="w-full sm:w-64">
-          <label htmlFor="search" className="sr-only">Search RFPs</label>
-          <input
-            type="search"
-            name="search"
-            id="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            placeholder="Search RFPs..."
-          />
+        {/* Search and Filters */}
+        <div className="rounded-2xl bg-white p-6 shadow-soft hover:shadow-glow transition-all duration-300 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="search"
+                name="search"
+                id="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="form-input"
+                placeholder="Search RFPs..."
+              />
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                className="form-select"
+              >
+                <option value="all">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-          >
-            <option value="all">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-      </div>
 
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th 
-                      scope="col" 
-                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
-                      onClick={() => handleSort('title')}
-                    >
-                      Title
-                      <SortIcon field="title" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('status')}
-                    >
-                      Status
-                      <SortIcon field="status" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('deadline')}
-                    >
-                      Deadline
-                      <SortIcon field="deadline" />
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
-                      onClick={() => handleSort('bids')}
-                    >
-                      Bids
-                      <SortIcon field="bids" />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {sortedAndFilteredRfps.map((rfp) => (
-                    <tr 
-                      key={rfp.id}
-                      onClick={() => handleRowClick(rfp.id)}
-                      className="cursor-pointer hover:bg-gray-50"
-                    >
-                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                        {rfp.title}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          rfp.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                          rfp.status === 'published' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {rfp.status.charAt(0).toUpperCase() + rfp.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+        {/* RFP List */}
+        <div className="rounded-2xl bg-white p-6 shadow-soft hover:shadow-glow transition-all duration-300">
+          <div className="overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 rounded-t-xl">
+                <tr>
+                  <th 
+                    scope="col" 
+                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer"
+                    onClick={() => handleSort('title')}
+                  >
+                    Title
+                    <SortIcon field="title" />
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('status')}
+                  >
+                    Status
+                    <SortIcon field="status" />
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('deadline')}
+                  >
+                    Deadline
+                    <SortIcon field="deadline" />
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer"
+                    onClick={() => handleSort('bids')}
+                  >
+                    Bids
+                    <SortIcon field="bids" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {sortedAndFilteredRfps.map((rfp) => (
+                  <tr 
+                    key={rfp.id}
+                    onClick={() => handleRowClick(rfp.id)}
+                    className="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                  >
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                      {rfp.title}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                        rfp.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                        rfp.status === 'published' ? 'bg-primary-50 text-primary-700' :
+                        'bg-accent-50 text-accent-700'
+                      }`}>
+                        {rfp.status.charAt(0).toUpperCase() + rfp.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <span className="inline-flex items-center rounded-full bg-secondary-50 px-2 py-1 text-xs font-medium text-secondary-700">
                         {new Date(rfp.deadline).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric'
                         })}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium">{rfp.bids?.length || 0} bids</span>
-                          {rfp.bids && rfp.bids.length > 0 && (
-                            <div className="text-xs text-gray-500">
-                              {rfp.bids.map(bid => (
-                                <div key={bid.id} className="flex items-center gap-1">
-                                  <span className={`w-2 h-2 rounded-full ${
-                                    bid.status === 'accepted' ? 'bg-green-400' :
-                                    bid.status === 'rejected' ? 'bg-red-400' :
-                                    'bg-yellow-400'
-                                  }`} />
-                                  {bid.companyName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {sortedAndFilteredRfps.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="px-3 py-4 text-sm text-gray-500 text-center">
-                        No RFPs found matching the selected filters
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{rfp.bids?.length || 0} bids</span>
+                        {rfp.bids && rfp.bids.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            {rfp.bids.map(bid => (
+                              <div key={bid.id} className="flex items-center gap-1">
+                                <span className={`w-2 h-2 rounded-full ${
+                                  bid.status === 'accepted' ? 'bg-green-400' :
+                                  bid.status === 'rejected' ? 'bg-accent-400' :
+                                  'bg-yellow-400'
+                                }`} />
+                                {bid.companyName}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {sortedAndFilteredRfps.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-8 text-center text-sm text-gray-500">
+                      <div className="flex flex-col items-center justify-center">
+                        <svg className="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <p className="text-gray-900 font-medium">No RFPs found</p>
+                        <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
