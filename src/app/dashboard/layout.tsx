@@ -9,14 +9,9 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Background layers */}
+      {/* Background layer */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,197,94,0.2),rgba(255,255,255,0))]"></div>
-        </div>
-        <div className="absolute inset-0 bg-noise mix-blend-soft-light opacity-[0.15]"></div>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1),rgba(255,255,255,0.4))]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-primary-50 to-secondary-50/70"></div>
       </div>
 
       {/* Content */}
