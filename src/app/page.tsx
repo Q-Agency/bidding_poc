@@ -200,48 +200,51 @@ export default function HomePage() {
 
         {/* Hero Section */}
         <div className="relative isolate pt-14">
-          <div className="mx-auto max-w-7xl px-6 py-8 sm:py-12 lg:px-8">
-            <div className="max-w-2xl text-left">
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-                Streamline Your RFP Process with BidFlow
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
-                Transform your RFP management with our intelligent platform. Create, manage, and analyze RFPs with ease.
-              </p>
-              <div className="mt-10 flex items-center gap-x-6">
-                <Link
-                  href="/register"
-                  className="btn-primary"
-                >
-                  Get Started
-                </Link>
-                <Link
-                  href="#benefits"
-                  className="btn-secondary"
-                >
-                  Learn More
-                </Link>
+          <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left Column - Text Content */}
+              <div className="max-w-xl">
+                <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent sm:text-6xl">
+                  Streamline Your RFP Process with BidFlow
+                </h1>
+                <p className="mt-6 text-lg leading-8 text-gray-600">
+                  Transform your RFP management with our intelligent platform. Create, manage, and analyze RFPs with ease.
+                </p>
+                <div className="mt-10 flex items-center gap-x-6">
+                  <Link
+                    href="/register"
+                    className="btn-primary"
+                  >
+                    Get Started
+                  </Link>
+                  <Link
+                    href="#benefits"
+                    className="btn-secondary"
+                  >
+                    Learn More
+                  </Link>
+                </div>
               </div>
-            </div>
 
-            {/* Dashboard Preview */}
-            <div className="mt-8">
-              <div className="relative lg:left-0">
-                <Image
-                  src="/images/dashboard-preview.png"
-                  alt="BidFlow Dashboard"
-                  width={1200}
-                  height={800}
-                  className="w-full rounded-xl lg:max-w-[110%]"
-                  priority
-                />
+              {/* Right Column - Dashboard Preview */}
+              <div className="relative lg:mt-0 mt-8">
+                <div className="relative lg:scale-[1.35] lg:translate-x-20">
+                  <Image
+                    src="/images/dashboard-preview.png"
+                    alt="BidFlow Dashboard"
+                    width={1200}
+                    height={800}
+                    className="relative w-full"
+                    priority
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Feature Showcase */}
-        <div id="features" className="relative z-10 py-12 sm:py-16">
+        <div id="features" className="relative z-10 py-8 sm:py-12">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -253,7 +256,7 @@ export default function HomePage() {
             </div>
 
             {/* RFP Upload & Analysis Feature */}
-            <div className="mt-16 sm:mt-20 lg:mt-24">
+            <div className="mt-16">
               <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
                 <div className="lg:pr-8">
                   <div className="lg:max-w-lg">
@@ -300,7 +303,7 @@ export default function HomePage() {
             </div>
 
             {/* Bid Management Feature */}
-            <div className="mt-16">
+            <div className="mt-24">
               <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
                 <div className="lg:pr-8 order-last">
                   <div className="lg:max-w-lg">
@@ -347,7 +350,7 @@ export default function HomePage() {
             </div>
 
             {/* Analytics Feature */}
-            <div className="mt-16">
+            <div className="mt-24">
               <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
                 <div className="lg:pr-8">
                   <div className="lg:max-w-lg">
