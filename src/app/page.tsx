@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const VALUES = [
   {
@@ -210,36 +211,42 @@ export default function HomePage() {
         </header>
 
         {/* Hero Section */}
-        <div className="relative isolate overflow-hidden">
-          <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
-            <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8">
-              <h1 className="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-                Transform Your RFP Process with{' '}
-                <span className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                  AI-Powered Insights
-                </span>
+        <div className="relative isolate pt-14">
+          <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                Streamline Your RFP Process with BidFlow
               </h1>
               <p className="mt-6 text-lg leading-8 text-gray-600">
-                BidFlow streamlines your RFP management with intelligent automation, real-time analytics, and collaborative tools. Upload RFPs, manage bids, and make data-driven decisions all in one place.
+                Transform your RFP management with our intelligent platform. Create, manage, and analyze RFPs with ease.
               </p>
-              <div className="mt-10 flex items-center gap-x-6">
-                <button
-                  onClick={() => scrollToSection('features')}
+              <div className="mt-10 flex items-center justify-center gap-x-6">
+                <Link
+                  href="/register"
                   className="btn-primary"
                 >
-                  See how it works
-                </button>
+                  Get Started
+                </Link>
+                <Link
+                  href="#benefits"
+                  className="btn-secondary"
+                >
+                  Learn More
+                </Link>
               </div>
             </div>
-            <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none">
-              <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
-                <div className="relative">
-                  <img
+
+            {/* Dashboard Preview */}
+            <div className="mt-12 sm:mt-16">
+              <div className="relative">
+                <div className="relative mx-auto max-w-4xl">
+                  <Image
                     src="/images/dashboard-preview.png"
-                    alt="BidFlow dashboard preview"
-                    className="w-[76rem] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                    alt="BidFlow Dashboard"
+                    width={1200}
+                    height={800}
+                    className="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-[85%] mx-auto"
                   />
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10"></div>
                 </div>
               </div>
             </div>
@@ -408,7 +415,7 @@ export default function HomePage() {
         </div>
 
         {/* Benefits Section */}
-        <div id="benefits" className="relative z-10 py-24 sm:py-32">
+        <div id="benefits" className="py-16">
           <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
               <div className="mx-auto max-w-2xl text-center">
@@ -462,7 +469,7 @@ export default function HomePage() {
         </div>
 
         {/* About Section */}
-        <div id="about" className="relative z-10 py-24 sm:py-32">
+        <div id="about" className="py-16">
           <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
               <div className="mx-auto max-w-2xl lg:mx-0">
