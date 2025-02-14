@@ -6,16 +6,16 @@ const mockUsers = {
   'company1@example.com': {
     id: `user_${Date.now() - 1000}`,
     email: 'company1@example.com',
-    name: 'John Smith',
-    companyName: 'Tech Solutions Inc.',
+    name: 'TechVision Solutions',
+    companyName: 'TechVision Solutions Inc.',
     role: 'company' as UserRole,
     profileImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=company1',
   },
   'company2@example.com': {
     id: `user_${Date.now() - 2000}`,
     email: 'company2@example.com',
-    name: 'Sarah Johnson',
-    companyName: 'Digital Innovations Ltd.',
+    name: 'InnovateTech Systems',
+    companyName: 'InnovateTech Systems Ltd.',
     role: 'company' as UserRole,
     profileImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=company2',
   },
@@ -30,8 +30,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     const mockUser: User = existingUser || {
       id: `user_${Date.now()}`,
       email,
-      name: 'Demo User',
-      companyName: 'Demo Company',
+      name: 'Quantum Dynamics',
+      companyName: 'Quantum Dynamics Corp.',
       role: 'company',
       profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
     };

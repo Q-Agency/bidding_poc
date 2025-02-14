@@ -568,7 +568,7 @@ export default function CreateRfpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
@@ -614,189 +614,187 @@ export default function CreateRfpPage() {
         </div>
       )}
       
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-soft hover:shadow-glow transition-all duration-300">
-          <div className="p-6 sm:p-8">
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                Create New RFP
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Fill out the form below to create a new Request for Proposal. You can also upload a document to auto-fill the form.
-              </p>
-            </div>
+      <div className="bg-white rounded-2xl shadow-soft hover:shadow-glow transition-all duration-300">
+        <div className="p-6 sm:p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+              Create New RFP
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Fill out the form below to create a new Request for Proposal. You can also upload a document to auto-fill the form.
+            </p>
+          </div>
 
-            {/* Document Upload */}
-            <div className="mb-8">
-              <div className="max-w-xl">
-                <label
-                  htmlFor="file-upload"
-                  className={`relative block w-full rounded-lg border-2 border-dashed p-6 text-center focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer transition-all duration-300 ${
-                    uploadState === 'error' 
-                      ? 'border-red-300 hover:border-red-400' 
-                      : uploadState === 'completed'
-                      ? 'border-green-300 hover:border-green-400'
-                      : 'border-gray-300 hover:border-primary-400'
+          {/* Document Upload */}
+          <div className="mb-8">
+            <div className="max-w-xl">
+              <label
+                htmlFor="file-upload"
+                className={`relative block w-full rounded-lg border-2 border-dashed p-6 text-center focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer transition-all duration-300 ${
+                  uploadState === 'error' 
+                    ? 'border-red-300 hover:border-red-400' 
+                    : uploadState === 'completed'
+                    ? 'border-green-300 hover:border-green-400'
+                    : 'border-gray-300 hover:border-primary-400'
+                }`}
+              >
+                <DocumentPlusIcon className={`mx-auto h-12 w-12 transition-colors duration-300 ${
+                  uploadState === 'error' 
+                    ? 'text-red-400' 
+                    : uploadState === 'completed'
+                    ? 'text-green-400'
+                    : uploadState === 'uploading' || uploadState === 'scanning' || uploadState === 'analyzing' || uploadState === 'extracting'
+                    ? 'text-primary-400 animate-pulse'
+                    : 'text-gray-400'
+                }`} />
+                
+                {uploadState === 'idle' && (
+                  <>
+                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                      Upload a document to auto-fill
+                    </span>
+                    <span className="mt-1 block text-sm text-gray-500">
+                      PDF, DOC, or DOCX up to 10MB
+                    </span>
+                  </>
+                )}
+                
+                {(uploadState === 'uploading' || uploadState === 'scanning' || uploadState === 'analyzing' || uploadState === 'extracting') && (
+                  <div className="mt-4">
+                    <span className="block text-sm font-medium text-gray-900">
+                      {currentStage.stage}...
+                    </span>
+                    <div className="mt-2">
+                      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary-500 transition-all duration-300"
+                          style={{ width: `${currentStage.progress}%` }}
+                        />
+                      </div>
+                      <span className="mt-2 block text-xs text-gray-500">
+                        {currentStage.progress}%
+                      </span>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-500">
+                      {uploadState === 'uploading' && 'Uploading your document...'}
+                      {uploadState === 'scanning' && 'Scanning document for content...'}
+                      {uploadState === 'analyzing' && 'Analyzing document structure...'}
+                      {uploadState === 'extracting' && 'Extracting relevant information...'}
+                    </div>
+                  </div>
+                )}
+                
+                {uploadState === 'completed' && uploadedFile && (
+                  <div className="mt-4 text-left">
+                    <div className="flex items-center gap-2">
+                      <DocumentPlusIcon className="h-5 w-5 text-green-500" />
+                      <span className="font-medium text-gray-900">{uploadedFile.name}</span>
+                      <span className="text-sm text-gray-500">({uploadedFile.size})</span>
+                    </div>
+                    <div className="mt-3">
+                      <h4 className="text-sm font-medium text-gray-900">Extracted Information:</h4>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {uploadedFile.extractedFields.map((field) => (
+                          <span
+                            key={field}
+                            className="inline-flex items-center rounded-full bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
+                          >
+                            {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        <p>Budget set to: $50,000 - $100,000</p>
+                        <p>Deadline set to: {new Date(watch('deadline')).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="mt-3 text-sm text-primary-600 hover:text-primary-500 font-medium"
+                    >
+                      Replace document
+                    </button>
+                  </div>
+                )}
+                
+                {uploadState === 'error' && (
+                  <div className="mt-2">
+                    <span className="block text-sm font-medium text-red-600">
+                      Error analyzing document
+                    </span>
+                    <span className="mt-1 block text-sm text-gray-500">
+                      Please try again
+                    </span>
+                  </div>
+                )}
+                
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".pdf,.doc,.docx"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Progress Steps */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center">
+              {[1, 2, 3].map((step) => (
+                <button
+                  key={step}
+                  onClick={() => setCurrentStep(step)}
+                  className={`flex-1 text-center py-2 ${
+                    currentStep === step
+                      ? 'border-b-2 border-primary-500 text-primary-600 font-medium'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <DocumentPlusIcon className={`mx-auto h-12 w-12 transition-colors duration-300 ${
-                    uploadState === 'error' 
-                      ? 'text-red-400' 
-                      : uploadState === 'completed'
-                      ? 'text-green-400'
-                      : uploadState === 'uploading' || uploadState === 'scanning' || uploadState === 'analyzing' || uploadState === 'extracting'
-                      ? 'text-primary-400 animate-pulse'
-                      : 'text-gray-400'
-                  }`} />
-                  
-                  {uploadState === 'idle' && (
-                    <>
-                      <span className="mt-2 block text-sm font-medium text-gray-900">
-                        Upload a document to auto-fill
-                      </span>
-                      <span className="mt-1 block text-sm text-gray-500">
-                        PDF, DOC, or DOCX up to 10MB
-                      </span>
-                    </>
-                  )}
-                  
-                  {(uploadState === 'uploading' || uploadState === 'scanning' || uploadState === 'analyzing' || uploadState === 'extracting') && (
-                    <div className="mt-4">
-                      <span className="block text-sm font-medium text-gray-900">
-                        {currentStage.stage}...
-                      </span>
-                      <div className="mt-2">
-                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary-500 transition-all duration-300"
-                            style={{ width: `${currentStage.progress}%` }}
-                          />
-                        </div>
-                        <span className="mt-2 block text-xs text-gray-500">
-                          {currentStage.progress}%
-                        </span>
-                      </div>
-                      <div className="mt-3 text-xs text-gray-500">
-                        {uploadState === 'uploading' && 'Uploading your document...'}
-                        {uploadState === 'scanning' && 'Scanning document for content...'}
-                        {uploadState === 'analyzing' && 'Analyzing document structure...'}
-                        {uploadState === 'extracting' && 'Extracting relevant information...'}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {uploadState === 'completed' && uploadedFile && (
-                    <div className="mt-4 text-left">
-                      <div className="flex items-center gap-2">
-                        <DocumentPlusIcon className="h-5 w-5 text-green-500" />
-                        <span className="font-medium text-gray-900">{uploadedFile.name}</span>
-                        <span className="text-sm text-gray-500">({uploadedFile.size})</span>
-                      </div>
-                      <div className="mt-3">
-                        <h4 className="text-sm font-medium text-gray-900">Extracted Information:</h4>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {uploadedFile.extractedFields.map((field) => (
-                            <span
-                              key={field}
-                              className="inline-flex items-center rounded-full bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
-                            >
-                              {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="mt-2 text-sm text-gray-600">
-                          <p>Budget set to: $50,000 - $100,000</p>
-                          <p>Deadline set to: {new Date(watch('deadline')).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="mt-3 text-sm text-primary-600 hover:text-primary-500 font-medium"
-                      >
-                        Replace document
-                      </button>
-                    </div>
-                  )}
-                  
-                  {uploadState === 'error' && (
-                    <div className="mt-2">
-                      <span className="block text-sm font-medium text-red-600">
-                        Error analyzing document
-                      </span>
-                      <span className="mt-1 block text-sm text-gray-500">
-                        Please try again
-                      </span>
-                    </div>
-                  )}
-                  
-                  <input
-                    id="file-upload"
-                    type="file"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    accept=".pdf,.doc,.docx"
-                  />
-                </label>
-              </div>
+                  {step === 1 ? 'Basic Info' : step === 2 ? 'Requirements' : 'Team & Compliance'}
+                </button>
+              ))}
             </div>
-
-            {/* Progress Steps */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center">
-                {[1, 2, 3].map((step) => (
-                  <button
-                    key={step}
-                    onClick={() => setCurrentStep(step)}
-                    className={`flex-1 text-center py-2 ${
-                      currentStep === step
-                        ? 'border-b-2 border-primary-500 text-primary-600 font-medium'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {step === 1 ? 'Basic Info' : step === 2 ? 'Requirements' : 'Team & Compliance'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)}>
-              {renderStep()}
-
-              {/* Navigation Buttons */}
-              <div className="mt-8 flex justify-between">
-                {currentStep > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(currentStep - 1)}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    Previous
-                  </button>
-                )}
-                <div className="flex-1" />
-                {currentStep < 3 ? (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(currentStep + 1)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create RFP'}
-                  </button>
-                )}
-              </div>
-            </form>
           </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {renderStep()}
+
+            {/* Navigation Buttons */}
+            <div className="mt-8 flex justify-between">
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Previous
+                </button>
+              )}
+              <div className="flex-1" />
+              {currentStep < 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(currentStep + 1)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Creating...' : 'Create RFP'}
+                </button>
+              )}
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -342,9 +342,8 @@ export default function CreateBidPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50/30">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -375,9 +374,7 @@ export default function CreateBidPage() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="space-y-8">
-          {/* AI Analysis Card */}
           <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
             <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-6">
               Document Analysis
@@ -420,12 +417,9 @@ export default function CreateBidPage() {
                 {isAnalyzing && (
                   <div className="text-center py-12">
                     <div className="flex flex-col items-center justify-center">
-                      {/* Large centered animation container */}
                       <div className="relative w-32 h-32 mb-8">
-                        {/* Simple background circle with subtle gradient */}
                         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 animate-pulse"></div>
                         
-                        {/* Processing icon with minimal animation */}
                         {analysisStep === 'extracting' && (
                           <div className="absolute inset-0 flex items-center justify-center animate-float">
                             <DocumentTextIcon className="h-20 w-20 text-primary-600" />
@@ -443,12 +437,10 @@ export default function CreateBidPage() {
                         )}
                       </div>
                       
-                      {/* Large status text */}
                       <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 bg-300% animate-gradient bg-clip-text text-transparent">
                         {processingText}
                       </h3>
                       
-                      {/* Simplified progress bar */}
                       <div className="w-64 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-700 ease-in-out"
@@ -460,7 +452,6 @@ export default function CreateBidPage() {
                         />
                       </div>
                       
-                      {/* Minimal stage indicators */}
                       <div className="mt-4 flex justify-between w-64 text-sm">
                         <span className={analysisStep === 'extracting' ? 'text-primary-600 font-medium' : 'text-gray-400'}>
                           Extracting
@@ -529,7 +520,6 @@ export default function CreateBidPage() {
             </div>
           </div>
 
-          {/* RFP Requirements Card */}
           <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -583,7 +573,6 @@ export default function CreateBidPage() {
             </div>
           </div>
 
-          {/* Bid Form */}
           <form id="bidForm" onSubmit={handleSubmit(onSubmit)} className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300 space-y-8">
             <div className="flex items-center gap-3 mb-6">
               <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -594,7 +583,6 @@ export default function CreateBidPage() {
               </h2>
             </div>
 
-            {/* Budget and Timeline Section */}
             <div className="bg-primary-50/50 rounded-xl p-6 space-y-6">
               <h3 className="text-lg font-medium text-primary-800 flex items-center gap-2">
                 <svg className="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -631,7 +619,6 @@ export default function CreateBidPage() {
               </div>
             </div>
 
-            {/* Technical Details Section */}
             <div className="bg-secondary-50/50 rounded-xl p-6 space-y-6">
               <h3 className="text-lg font-medium text-secondary-800 flex items-center gap-2">
                 <svg className="h-5 w-5 text-secondary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -681,7 +668,6 @@ export default function CreateBidPage() {
               </div>
             </div>
 
-            {/* Deliverables Section */}
             <div className="bg-green-50/50 rounded-xl p-6 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-green-800 flex items-center gap-2">
@@ -718,7 +704,6 @@ export default function CreateBidPage() {
               </div>
             </div>
 
-            {/* Project Milestones Section */}
             <div className="bg-blue-50/50 rounded-xl p-6 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-blue-800 flex items-center gap-2">
@@ -768,7 +753,6 @@ export default function CreateBidPage() {
               </div>
             </div>
 
-            {/* Team Composition Section */}
             <div className="bg-purple-50/50 rounded-xl p-6 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-purple-800 flex items-center gap-2">
@@ -812,7 +796,6 @@ export default function CreateBidPage() {
               </div>
             </div>
 
-            {/* Quality & Risk Section */}
             <div className="bg-yellow-50/50 rounded-xl p-6 space-y-6">
               <h3 className="text-lg font-medium text-yellow-800 flex items-center gap-2">
                 <svg className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -849,7 +832,6 @@ export default function CreateBidPage() {
               </div>
             </div>
 
-            {/* Additional Files Section */}
             <div className="bg-gray-50/50 rounded-xl p-6 space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium text-gray-800 flex items-center gap-2">
@@ -898,7 +880,6 @@ export default function CreateBidPage() {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

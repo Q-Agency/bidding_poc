@@ -5,6 +5,36 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import Link from 'next/link';
 
+const VALUES = [
+  {
+    name: "Innovation",
+    description: "We continuously push the boundaries of what is possible in RFP management through AI and automation.",
+    icon: (
+      <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+      </svg>
+    ),
+  },
+  {
+    name: "Collaboration",
+    description: "We foster seamless collaboration between teams, making it easier to work together on complex proposals.",
+    icon: (
+      <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Excellence",
+    description: "We are committed to delivering the highest quality solutions that exceed our customers expectations.",
+    icon: (
+      <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+      </svg>
+    ),
+  },
+];
+
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
@@ -19,7 +49,7 @@ export default function HomePage() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const offset = 80; // Height of the fixed header
+      const offset = 80; // Account for fixed header
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
 
@@ -38,314 +68,458 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-white">
-      {/* Navigation */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-sm">
-        <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
-          <div className="flex lg:flex-1">
-            <button 
-              onClick={() => scrollToSection('hero')} 
-              className="-m-1.5 p-1.5 text-2xl font-bold text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
-            >
-              BidFlow
-            </button>
-          </div>
-          <div className="flex lg:hidden">
-            <button
-              type="button"
-              className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            </button>
-          </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            <button 
-              onClick={() => scrollToSection('features')} 
-              className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
-            >
-              Features
-            </button>
-            <button 
-              onClick={() => scrollToSection('benefits')} 
-              className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
-            >
-              Benefits
-            </button>
-            <Link 
-              href="/about" 
-              className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
-            >
-              About
-            </Link>
-          </div>
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <button 
-              onClick={() => router.push('/login')} 
-              className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
-            >
-              Log in <span aria-hidden="true">→</span>
-            </button>
-          </div>
-        </nav>
-
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden">
-            <div className="fixed inset-0 z-50">
-              <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-                <div className="flex items-center justify-between">
-                  <button 
-                    onClick={() => {
-                      scrollToSection('hero');
-                      setIsMenuOpen(false);
-                    }} 
-                    className="-m-1.5 p-1.5 text-2xl font-bold text-indigo-600"
-                  >
-                    BidFlow
-                  </button>
-                  <button
-                    type="button"
-                    className="-m-2.5 rounded-md p-2.5 text-gray-700"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="sr-only">Close menu</span>
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="mt-6 flow-root">
-                  <div className="space-y-2 py-6">
-                    <button
-                      onClick={() => scrollToSection('features')}
-                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      Features
-                    </button>
-                    <button
-                      onClick={() => scrollToSection('benefits')}
-                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      Benefits
-                    </button>
-                    <Link
-                      href="/about"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      About
-                    </Link>
-                  </div>
-                  <div className="py-6">
-                    <button
-                      onClick={() => router.push('/login')}
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      Log in
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* Hero Section */}
-      <div id="hero" className="relative isolate px-6 pt-14 lg:px-8">
-        <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-          <div
-            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-            style={{
-              clipPath:
-                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-            }}
-          />
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Background layers */}
+      <div className="fixed inset-0 z-0">
+        {/* Primary gradient layer */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-secondary-50/30"></div>
+        
+        {/* Radial gradient accents */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.15),transparent_70%)]"></div>
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15),transparent_70%)]"></div>
+          <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.1),transparent_70%)]"></div>
         </div>
-        <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Streamline Your RFP Process with BidFlow
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
-              Simplify your Request for Proposal management with our intelligent platform. From creation to submission,
-              we make the entire process effortless and efficient.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <button
-                onClick={() => router.push('/login')}
-                className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
-              >
-                Get started
-              </button>
+        
+        {/* Noise texture overlay */}
+        <div className="absolute inset-0 bg-noise mix-blend-soft-light opacity-[0.15]"></div>
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                           linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)`,
+          backgroundSize: '64px 64px'
+        }}></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Navigation */}
+        <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
+          <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
+            <div className="flex lg:flex-1">
               <button 
-                onClick={() => scrollToSection('features')}
+                onClick={() => scrollToSection('hero')} 
+                className="-m-1.5 p-1.5 text-2xl font-bold text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
+              >
+                BidFlow
+              </button>
+            </div>
+            <div className="flex lg:hidden">
+              <button
+                type="button"
+                className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                <span className="sr-only">Open main menu</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+              </button>
+            </div>
+            <div className="hidden lg:flex lg:gap-x-12">
+              <button 
+                onClick={() => scrollToSection('features')} 
                 className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
               >
-                Learn more <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div id="features" className="bg-white py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-indigo-600">Powerful Features</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need to manage RFPs
-            </p>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
-              Our comprehensive platform provides all the tools you need to create, manage, and respond to RFPs efficiently.
-            </p>
-          </div>
-          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <svg className="h-5 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                  </svg>
-                  AI-Powered Analysis
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">
-                    Our advanced AI technology automatically analyzes RFP documents, extracting key requirements and suggesting optimal responses.
-                  </p>
-                </dd>
-              </div>
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <svg className="h-5 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.25 2A2.25 2.25 0 002 4.25v2.5A2.25 2.25 0 004.25 9h2.5A2.25 2.25 0 009 6.75v-2.5A2.25 2.25 0 006.75 2h-2.5zm0 9A2.25 2.25 0 002 13.25v2.5A2.25 2.25 0 004.25 18h2.5A2.25 2.25 0 009 15.75v-2.5A2.25 2.25 0 006.75 11h-2.5zm9-9A2.25 2.25 0 0011 4.25v2.5A2.25 2.25 0 0013.25 9h2.5A2.25 2.25 0 0018 6.75v-2.5A2.25 2.25 0 0015.75 2h-2.5zm0 9A2.25 2.25 0 0011 13.25v2.5A2.25 2.25 0 0013.25 18h2.5A2.25 2.25 0 0018 15.75v-2.5A2.25 2.25 0 0015.75 11h-2.5z" clipRule="evenodd" />
-                  </svg>
-                  Comprehensive Dashboard
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">
-                    Get a complete overview of all your RFPs, track progress, and manage deadlines from a single dashboard.
-                  </p>
-                </dd>
-              </div>
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <svg className="h-5 w-5 flex-none text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                  </svg>
-                  Collaboration Tools
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">
-                    Work seamlessly with your team, share documents, and manage permissions all in one place.
-                  </p>
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      {/* Benefits Section */}
-      <div id="benefits" className="bg-gray-900 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-indigo-400">Why Choose BidFlow</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Transform Your RFP Process
-            </p>
-            <p className="mt-6 text-lg leading-8 text-gray-300">
-              Experience the benefits of a modern, efficient, and intelligent RFP management platform.
-            </p>
-          </div>
-          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-              {[
-                {
-                  title: 'Save Time',
-                  description: 'Reduce RFP creation and response time by up to 60% with our AI-powered tools and templates.',
-                  icon: (
-                    <svg className="h-5 w-5 flex-none text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                  ),
-                },
-                {
-                  title: 'Increase Accuracy',
-                  description: 'Minimize errors and improve the quality of your proposals with our intelligent validation system.',
-                  icon: (
-                    <svg className="h-5 w-5 flex-none text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                    </svg>
-                  ),
-                },
-                {
-                  title: 'Better Collaboration',
-                  description: 'Enable seamless teamwork with real-time collaboration features and automated workflows.',
-                  icon: (
-                    <svg className="h-5 w-5 flex-none text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.357-.442 3 3 0 00-4.308-3.517 6.484 6.484 0 011.907 3.96 2.32 2.32 0 01-.026.654zM18 8a2 2 0 11-4 0 2 2 0 014 0zM5.304 16.19a.844.844 0 01-.277-.71 5 5 0 019.947 0 .843.843 0 01-.277.71A6.975 6.975 0 0110 18a6.974 6.974 0 01-4.696-1.81z" />
-                    </svg>
-                  ),
-                },
-              ].map((benefit) => (
-                <div key={benefit.title} className="flex flex-col">
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
-                    {benefit.icon}
-                    {benefit.title}
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-300">
-                    <p className="flex-auto">{benefit.description}</p>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="bg-white">
-        <div className="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
-          <div className="relative isolate overflow-hidden bg-gray-900 px-6 py-24 text-center shadow-2xl sm:rounded-3xl sm:px-16">
-            <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to transform your RFP process?
-            </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
-              Join thousands of companies that trust BidFlow to streamline their RFP management.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <button
-                onClick={() => router.push('/login')}
-                className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors duration-200"
-              >
-                Get started now
+                Features
               </button>
               <button 
-                onClick={() => scrollToSection('features')}
-                className="text-sm font-semibold leading-6 text-white hover:text-indigo-300 transition-colors duration-200"
+                onClick={() => scrollToSection('benefits')} 
+                className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
               >
-                Learn more <span aria-hidden="true">→</span>
+                Benefits
+              </button>
+              <button 
+                onClick={() => scrollToSection('about')} 
+                className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
+              >
+                About
               </button>
             </div>
-            <svg
-              viewBox="0 0 1024 1024"
-              className="absolute left-1/2 top-1/2 -z-10 h-[64rem] w-[64rem] -translate-x-1/2 [mask-image:radial-gradient(closest-side,white,transparent)]"
-              aria-hidden="true"
-            >
-              <circle cx="512" cy="512" r="512" fill="url(#gradient)" fillOpacity="0.7" />
-              <defs>
-                <radialGradient id="gradient">
-                  <stop stopColor="#7775D6" />
-                  <stop offset="1" stopColor="#E935C1" />
-                </radialGradient>
-              </defs>
-            </svg>
+            <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+              <button 
+                onClick={() => router.push('/login')} 
+                className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition-colors duration-200"
+              >
+                Log in <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </nav>
+
+          {/* Mobile menu */}
+          {isMenuOpen && (
+            <div className="lg:hidden">
+              <div className="fixed inset-0 z-50">
+                <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+                  <div className="flex items-center justify-between">
+                    <button 
+                      onClick={() => {
+                        scrollToSection('hero');
+                        setIsMenuOpen(false);
+                      }} 
+                      className="-m-1.5 p-1.5 text-2xl font-bold text-indigo-600"
+                    >
+                      BidFlow
+                    </button>
+                    <button
+                      type="button"
+                      className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="sr-only">Close menu</span>
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-6 flow-root">
+                    <div className="space-y-2 py-6">
+                      <button
+                        onClick={() => scrollToSection('features')}
+                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        Features
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('benefits')}
+                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        Benefits
+                      </button>
+                      <button
+                        onClick={() => scrollToSection('about')}
+                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        About
+                      </button>
+                    </div>
+                    <div className="py-6">
+                      <button
+                        onClick={() => router.push('/login')}
+                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        Log in
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </header>
+
+        {/* Hero Section */}
+        <div className="relative isolate overflow-hidden">
+          <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-40">
+            <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8">
+              <h1 className="mt-10 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                Transform Your RFP Process with{' '}
+                <span className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                  AI-Powered Insights
+                </span>
+              </h1>
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                BidFlow streamlines your RFP management with intelligent automation, real-time analytics, and collaborative tools. Upload RFPs, manage bids, and make data-driven decisions all in one place.
+              </p>
+              <div className="mt-10 flex items-center gap-x-6">
+                <button
+                  onClick={() => scrollToSection('features')}
+                  className="btn-primary"
+                >
+                  See how it works
+                </button>
+              </div>
+            </div>
+            <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none">
+              <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
+                <div className="relative">
+                  <img
+                    src="/images/dashboard-preview.png"
+                    alt="BidFlow dashboard preview"
+                    className="w-[76rem] rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                  />
+                  <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature Showcase */}
+        <div id="features" className="relative z-10 py-24 sm:py-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Everything you need to manage RFPs efficiently
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                From document analysis to bid management and analytics, BidFlow provides a complete suite of tools for your RFP process.
+              </p>
+            </div>
+
+            {/* RFP Upload & Analysis Feature */}
+            <div className="mt-16 sm:mt-20 lg:mt-24">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
+                <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
+                  <div className="lg:pr-8">
+                    <div className="lg:max-w-lg">
+                      <h3 className="text-2xl font-semibold leading-7 text-primary-600">
+                        Intelligent RFP Analysis
+                      </h3>
+                      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                        Upload and analyze RFPs instantly
+                      </p>
+                      <p className="mt-6 text-lg leading-8 text-gray-600">
+                        Our AI-powered system automatically extracts key information, requirements, and deadlines from your RFP documents. Get instant insights and recommendations for your proposal strategy.
+                      </p>
+                      <div className="mt-8">
+                        <ul role="list" className="space-y-4">
+                          {[
+                            'Automatic document parsing and analysis',
+                            'Key requirements extraction',
+                            'Deadline tracking and reminders',
+                            'Smart categorization and tagging',
+                            'Compliance checklist generation',
+                          ].map((feature) => (
+                            <li key={feature} className="flex gap-x-3">
+                              <svg className="h-6 w-5 flex-none text-primary-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-gray-600">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-8 lg:mt-0">
+                    <div className="relative">
+                      <img
+                        src="/images/rfp-analysis.png"
+                        alt="RFP Analysis Interface"
+                        className="w-full rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                      />
+                      <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bid Management Feature */}
+            <div className="mt-16">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
+                <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
+                  <div className="lg:pr-8 order-last">
+                    <div className="lg:max-w-lg">
+                      <h3 className="text-2xl font-semibold leading-7 text-secondary-600">
+                        Streamlined Bid Management
+                      </h3>
+                      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                        Create and track bids effortlessly
+                      </p>
+                      <p className="mt-6 text-lg leading-8 text-gray-600">
+                        Manage your entire bidding process in one place. Create professional proposals, track their status, and collaborate with your team in real-time.
+                      </p>
+                      <div className="mt-8">
+                        <ul role="list" className="space-y-4">
+                          {[
+                            'Intuitive bid creation interface',
+                            'Real-time collaboration tools',
+                            'Document version control',
+                            'Automated proposal templates',
+                            'Bid status tracking and notifications',
+                          ].map((feature) => (
+                            <li key={feature} className="flex gap-x-3">
+                              <svg className="h-6 w-5 flex-none text-secondary-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-gray-600">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-8 lg:mt-0">
+                    <div className="relative">
+                      <img
+                        src="/images/bid-management.png"
+                        alt="Bid Management Interface"
+                        className="w-full rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                      />
+                      <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Analytics Feature */}
+            <div className="mt-16">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft hover:shadow-glow transition-all duration-300">
+                <div className="lg:grid lg:grid-cols-2 lg:gap-x-16">
+                  <div className="lg:pr-8">
+                    <div className="lg:max-w-lg">
+                      <h3 className="text-2xl font-semibold leading-7 text-accent-600">
+                        AI-Powered Analytics
+                      </h3>
+                      <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                        Make data-driven decisions
+                      </p>
+                      <p className="mt-6 text-lg leading-8 text-gray-600">
+                        Get deep insights into your RFP performance with our advanced analytics. Understand win rates, identify trends, and optimize your bidding strategy.
+                      </p>
+                      <div className="mt-8">
+                        <ul role="list" className="space-y-4">
+                          {[
+                            'Win rate analysis and predictions',
+                            'Competitive intelligence insights',
+                            'Performance trend visualization',
+                            'AI-generated recommendations',
+                            'Custom report generation',
+                          ].map((feature) => (
+                            <li key={feature} className="flex gap-x-3">
+                              <svg className="h-6 w-5 flex-none text-accent-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-gray-600">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-8 lg:mt-0">
+                    <div className="relative">
+                      <img
+                        src="/images/analytics-dashboard.png"
+                        alt="Analytics Dashboard"
+                        className="w-full rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                      />
+                      <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Benefits Section */}
+        <div id="benefits" className="relative z-10 py-24 sm:py-32">
+          <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft">
+            <div className="mx-auto max-w-7xl px-6 lg:px-8">
+              <div className="mx-auto max-w-2xl text-center">
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                  Why Choose BidFlow
+                </h2>
+                <p className="mt-6 text-lg leading-8 text-gray-600">
+                  Experience the advantages of our AI-powered RFP management platform
+                </p>
+              </div>
+
+              <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+                <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+                  <div className="flex flex-col">
+                    <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                      </svg>
+                      Time Savings
+                    </dt>
+                    <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                      <p className="flex-auto">Reduce RFP response time by up to 60% with AI-powered document analysis and automated workflows.</p>
+                    </dd>
+                  </div>
+                  <div className="flex flex-col">
+                    <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
+                      </svg>
+                      Higher Win Rates
+                    </dt>
+                    <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                      <p className="flex-auto">Improve your win rate by 40% with data-driven insights and competitive analysis.</p>
+                    </dd>
+                  </div>
+                  <div className="flex flex-col">
+                    <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                      <svg className="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                      </svg>
+                      Streamlined Process
+                    </dt>
+                    <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                      <p className="flex-auto">Centralize your RFP management with real-time collaboration and automated compliance checks.</p>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* About Section */}
+        <div id="about" className="relative z-10 py-24 sm:py-32">
+          <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-soft">
+            <div className="mx-auto max-w-7xl px-6 lg:px-8">
+              <div className="mx-auto max-w-2xl lg:mx-0">
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">About BidFlow</h2>
+                <p className="mt-6 text-lg leading-8 text-gray-600">
+                  We are on a mission to revolutionize how companies manage their RFP processes. Our platform combines
+                  cutting-edge AI technology with intuitive design to make RFP management efficient and effective.
+                </p>
+              </div>
+              <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+                <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+                  {VALUES.map((value) => (
+                    <div key={value.name} className="flex flex-col">
+                      <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                        {value.icon}
+                        {value.name}
+                      </dt>
+                      <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                        <p className="flex-auto">{value.description}</p>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <Link
+                href="/register"
+                className="btn-primary"
+              >
+                Get started for free
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="relative z-10 isolate mt-32 px-6 py-32 sm:mt-40 sm:py-40 lg:px-8">
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 to-secondary-50/50 backdrop-blur-sm"></div>
+            <div className="absolute inset-0 bg-noise mix-blend-soft-light opacity-[0.15]"></div>
+          </div>
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Ready to transform your RFP process?
+            </h2>
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
+              Join thousands of companies that trust BidFlow to streamline their RFP management and win more business.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <Link
+                href="/register"
+                className="btn-primary"
+              >
+                Get started for free
+              </Link>
+            </div>
           </div>
         </div>
       </div>

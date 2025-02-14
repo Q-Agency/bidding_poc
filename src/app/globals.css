@@ -4,7 +4,7 @@
 
 @layer base {
   html {
-    @apply h-full bg-gradient-to-br from-primary-50 to-secondary-50/30 scroll-smooth;
+    @apply h-full scroll-smooth;
   }
   body {
     @apply h-full antialiased;
@@ -28,7 +28,7 @@
   }
 
   .card {
-    @apply rounded-2xl bg-white p-6 shadow-soft hover:shadow-glow transition-all duration-300;
+    @apply rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-soft hover:shadow-glow transition-all duration-300;
   }
 
   .card-gradient {
@@ -104,12 +104,62 @@
   }
 }
 
-/* Custom Animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+/* Modern background utilities */
+.bg-modern-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.2) 0%,
+    rgba(139, 92, 246, 0.2) 25%,
+    rgba(244, 63, 94, 0.2) 50%,
+    rgba(34, 197, 94, 0.2) 75%,
+    rgba(14, 165, 233, 0.2) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
 }
 
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.25;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Additional animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Card hover effects */
+.hover-card-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-card-glow:hover {
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Custom Animations */
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
@@ -133,10 +183,6 @@
 @keyframes gradient {
   0% { background-position: 0% center; }
   100% { background-position: -200% center; }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
 }
 
 .animate-pulse-soft {
